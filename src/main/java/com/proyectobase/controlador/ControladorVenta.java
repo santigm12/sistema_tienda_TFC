@@ -11,6 +11,7 @@ import com.proyectobase.modelo.Producto;
 import com.proyectobase.modelo.ProductoDAO;
 import com.proyectobase.modelo.Sesion;
 import com.proyectobase.modelo.Usuario;
+import com.proyectobase.modelo.UsuarioDAO;
 import com.proyectobase.modelo.Venta;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -29,11 +30,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
 import java.util.ResourceBundle;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -90,6 +94,7 @@ public class ControladorVenta implements Initializable {
     ResultSet rs;
     
     private ProductoDAO productoDAO;
+    private UsuarioDAO usuarioDAO;
     ObservableList<Producto> lstProductos = FXCollections.observableArrayList();
     ObservableList<Producto> lstProductosEscaneados = FXCollections.observableArrayList();
     
@@ -441,35 +446,135 @@ public class ControladorVenta implements Initializable {
         }*/
     }
     
+    private String generarCorreoUnico(String nombre, String apellido) {
+    // Validación básica
+    if ((nombre == null || nombre.trim().isEmpty()) && 
+        (apellido == null || apellido.trim().isEmpty())) {
+        return "usuario" + System.currentTimeMillis() + "@empresa.com";
+    }
+
+    // Normalizar texto (quitar acentos y caracteres especiales)
+    String nombreBase = normalizarTexto(nombre != null ? nombre.trim().split(" ")[0] : "");
+    String apellidoBase = normalizarTexto(apellido != null ? apellido.trim().split(" ")[0] : "");
+
+    // Construir base del correo
+    String correoBase = (nombreBase.isEmpty() ? "user" : nombreBase.toLowerCase()) + 
+                       (apellidoBase.isEmpty() ? "" : "." + apellidoBase.toLowerCase());
+
+    // Dominio de la empresa
+    String dominio = "empresa.com";
+
+    // Generar primera versión del correo
+    String correoPropuesto = correoBase + "@" + dominio;
+    
+    // Verificar si ya existe
+    if (!existeCorreoEnLista(correoPropuesto)) {
+        return correoPropuesto;
+    }
+
+    // Si existe, añadir números hasta encontrar uno único
+    int contador = 1;
+    while (contador < 1000) { // Límite para evitar bucles infinitos
+        String correoConNumero = correoBase + contador + "@" + dominio;
+        if (!existeCorreoEnLista(correoConNumero)) {
+            return correoConNumero;
+        }
+        contador++;
+    }
+
+    // Si no se encontró uno único con números, usar timestamp
+    return correoBase + System.currentTimeMillis() + "@" + dominio;
+}
+
+/**
+ * Normaliza texto quitando acentos y caracteres especiales
+ */
+private String normalizarTexto(String texto) {
+    if (texto == null || texto.isEmpty()) {
+        return "";
+    }
+    return Normalizer.normalize(texto, Normalizer.Form.NFD)
+            .replaceAll("[^\\p{ASCII}]", "")
+            .replaceAll("[^a-zA-Z0-9]", "");
+}
+
+/**
+ * Verifica si un correo ya existe en la lista de usuarios
+ */
+private boolean existeCorreoEnLista(String correo) {
+    return lstUsuarios.stream()
+            .anyMatch(usuario -> usuario.getCorreo() != null && 
+                                usuario.getCorreo().equalsIgnoreCase(correo));
+}
+        
+    
     @FXML
     void insertarItem(ActionEvent event) {
-        try{
-            Producto productoNuevo = new Producto(
-                lstProductos.size()+1,
-                generarCodigoBarras(),
-                " ",
-                0.0,
-                0.0,
-                0,
-                " ",
-                    imagenToBase64(new Image(getClass().getResource("/no_image.png").toExternalForm())),
-                " ",
-                new Date(),
-                new Date()
-            );
+        switch (identificadorTabla) {
+            case 1 -> {
+                try{
+                    Producto productoNuevo = new Producto(
+                        lstProductos.size()+1,
+                        generarCodigoBarras(),
+                        " ",
+                        0.0,
+                        0.0,
+                        0,
+                        " ",
+                            imagenToBase64(new Image(getClass().getResource("/no_image.png").toExternalForm())),
+                        " ",
+                        new Date(),
+                        new Date()
+                    );
 
-            boolean exito = productoDAO.insertarProducto(productoNuevo);
-            if (exito) {
-                lstProductos.add(productoNuevo); 
-                System.out.println("Producto insertado con éxito");
-            } else {
-                System.out.println("No se pudo insertar el producto en la base de datos");
+                    boolean exito = productoDAO.insertarProducto(productoNuevo);
+                    if (exito) {
+                        lstProductos.add(productoNuevo); 
+                        System.out.println("Producto insertado con éxito");
+                    } else {
+                        System.out.println("No se pudo insertar el producto en la base de datos");
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error al insertar el producto: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
+            
+            case 2 -> {
+                
+            }
+            
+            case 3 -> {
+                try{
+                    Usuario usuarioNuevo = new Usuario(
+                        lstUsuarios.size()+1,
+                            generarCorreoUnico("nombre", "apellido"),
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            "",
+                            new Date(),
+                            0
+                    );
 
-        } catch (Exception e) {
-            System.err.println("Error al insertar el producto: " + e.getMessage());
-            e.printStackTrace();
+                    boolean exito = usuarioDAO.insertarUsuario(usuarioNuevo);
+                    if (exito) {
+                        lstUsuarios.add(usuarioNuevo); 
+                        System.out.println("Usuario insertado con éxito");
+                    } else {
+                        System.out.println("No se pudo insertar el usuario en la base de datos");
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error al insertar el usuario: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
         }
+        
     }
     
     private TextField tfpNombre;
@@ -1075,6 +1180,7 @@ public class ControladorVenta implements Initializable {
         try {
             conexion = ConexionSingleton.obtenerConexion();
             this.productoDAO = new ProductoDAO(conexion);
+            this.usuarioDAO = new UsuarioDAO(conexion);
             if (conexion != null) {
                 this.st = conexion.createStatement();
             }
