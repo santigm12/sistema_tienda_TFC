@@ -18,37 +18,9 @@ public class ProductoDAO {
     }
 
     // Método para actualizar un producto en la base de datos
-    public void actualizarProducto(Producto producto) {
-        String sql = """
-                UPDATE productos SET
-                    codigo_barras = ?,
-                    nombre = ?,
-                    precio = ?,
-                    stock = ?,
-                    descripcion = ?,
-                    imagenB64 = ?,
-                    categoria = ?,
-                    fecha_actualizacion = NOW()
-                WHERE id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            // Asignar los valores del producto a la consulta
-            stmt.setString(1, producto.getCodigo_barras());
-            stmt.setString(2, producto.getNombre());
-            stmt.setDouble(3, producto.getPrecio());
-            stmt.setInt(4, producto.getStock());
-            stmt.setString(5, producto.getDescripcion());
-            stmt.setString(6, producto.getImagenB64());
-            stmt.setString(7, producto.getCategoria());
-            stmt.setInt(8, producto.getId());
-            System.out.println("ENTRA");
-            // Ejecutar la actualización
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+    /*public boolean eliminarProducto(Producto producto){
+        
+    }*/
     
     public boolean insertarProducto(Producto producto) {
     String sql = "INSERT INTO productos (codigo_barras, nombre, precio, stock, descripcion, imagenB64, categoria, fecha_actualizacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";

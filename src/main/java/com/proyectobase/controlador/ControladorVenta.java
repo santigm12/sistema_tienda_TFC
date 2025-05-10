@@ -339,13 +339,13 @@ public class ControladorVenta implements Initializable {
                 String query = "UPDATE productos SET nombre=?, precio=?, stock=?, descripcion=?, imagenB64=?, categoria=? WHERE id=?";
                         try {
                             PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
-                            preparedStatement.setString(1, tfNombre.getText());
-                            preparedStatement.setDouble(2, Double.parseDouble(tfPrecio.getText()));
-                            preparedStatement.setInt(3, Integer.parseInt(tfStock.getText()));
-                            preparedStatement.setString(4, tfDescripcion.getText());
+                            preparedStatement.setString(1, tfpNombre.getText());
+                            preparedStatement.setDouble(2, Double.parseDouble(tfpPrecio.getText()));
+                            preparedStatement.setInt(3, Integer.parseInt(tfpStock.getText()));
+                            preparedStatement.setString(4, tfpDescripcion.getText());
                             preparedStatement.setString(5, imagenToBase64(imagenActualizar.getImage()));
-                            preparedStatement.setString(6, tfCategoria.getText());
-                            preparedStatement.setInt(7, Integer.parseInt(tfid.getText()));
+                            preparedStatement.setString(6, tfpCategoria.getText());
+                            preparedStatement.setInt(7, Integer.parseInt(tfpid.getText()));
                             preparedStatement.executeUpdate();
                         } catch (SQLException ex) {
                             System.out.println("Excepción: "+ex.getMessage());
@@ -360,7 +360,23 @@ public class ControladorVenta implements Initializable {
             }
             
             case 3 -> {
-            
+                String query = "UPDATE usuarios SET correo=?, rol=?, nombre=?, apellido=?, telefono=?, direccion=? WHERE id=?";
+                        try {
+                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
+                            preparedStatement.setString(1, tfuCorreo.getText());
+                            preparedStatement.setString(2, tfuPermisos.getText());
+                            preparedStatement.setString(3, tfuNombre.getText());
+                            preparedStatement.setString(4, tfuApellidos.getText());
+                            preparedStatement.setString(5, tfuTelefono.getText());
+                            preparedStatement.setString(6, tfuDireccion.getText());
+                            preparedStatement.setInt(7, Integer.parseInt(tfuId.getText()));
+                            preparedStatement.executeUpdate();
+                        } catch (SQLException ex) {
+                            System.out.println("Excepción: "+ex.getMessage());
+                        }catch (IllegalArgumentException e){
+                            System.out.println("El número introducido no es correcto");
+                        }tablaUsuarios.getItems().clear();
+                        tablaUsuarios.setItems(obtenerListaUsuarios());
             }
             
             case 4 -> {
@@ -456,29 +472,26 @@ public class ControladorVenta implements Initializable {
         }
     }
     
-    private TextField tfNombre;
-    private TextField tfPrecio;
-    private TextField tfStock;
-    private TextArea tfDescripcion;
-    private TextField tfCategoria;
+    private TextField tfpNombre;
+    private TextField tfpPrecio;
+    private TextField tfpStock;
+    private TextArea tfpDescripcion;
+    private TextField tfpCategoria;
     private FileChooser fileChooser;
     private String imagenSeleccionadaB64;
-    private TextField tfid;
-    private TextField tfcodigoBarras;
-    private TextField tfPrecioIva;
-    private TextField tfFechaCreacion;
-    private TextField tfFechaActualizacion;
+    private TextField tfpid;
+    private TextField tfpcodigoBarras;
+    private TextField tfpPrecioIva;
+    private TextField tfpFechaCreacion;
+    private TextField tfpFechaActualizacion;
     private ImageView imagenActualizar;
-    
-
-
-    
     
 
     
     @FXML
     void verPaneProductos(ActionEvent event) {
         vboxEditarItem.setVisible(true);
+        vboxEditarItem.getChildren().clear();
         identificadorTabla = 1;
         paneProductos.setVisible(true);
         paneSesiones.setVisible(false);
@@ -488,22 +501,22 @@ public class ControladorVenta implements Initializable {
         vboxEditarItem.getChildren().clear();
 
         // Inicializamos los TextField
-        tfNombre = new TextField();
-        tfPrecio = new TextField();
-        tfStock = new TextField();
-        tfDescripcion = new TextArea();
-        tfCategoria = new TextField();
-        tfid = new TextField();
-        tfcodigoBarras = new TextField();
-        tfPrecioIva = new TextField();
-        tfFechaCreacion = new TextField();
-        tfFechaActualizacion = new TextField();
+        tfpNombre = new TextField();
+        tfpPrecio = new TextField();
+        tfpStock = new TextField();
+        tfpDescripcion = new TextArea();
+        tfpCategoria = new TextField();
+        tfpid = new TextField();
+        tfpcodigoBarras = new TextField();
+        tfpPrecioIva = new TextField();
+        tfpFechaCreacion = new TextField();
+        tfpFechaActualizacion = new TextField();
         
-        tfid.setEditable(false);
-        tfcodigoBarras.setEditable(false);
-        tfPrecioIva.setEditable(false);
-        tfFechaCreacion.setEditable(false);
-        tfFechaActualizacion.setEditable(false);
+        tfpid.setEditable(false);
+        tfpcodigoBarras.setEditable(false);
+        tfpPrecioIva.setEditable(false);
+        tfpFechaCreacion.setEditable(false);
+        tfpFechaActualizacion.setEditable(false);
         // Configuración del FileChooser (fuera del listener)
         fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(
@@ -548,10 +561,10 @@ public class ControladorVenta implements Initializable {
 
         // Añadimos los componentes al VBox
         vboxEditarItem.getChildren().addAll(
-            labelId, tfid, labelCodigoBarras, tfcodigoBarras, titulo, labelNombre, tfNombre, labelPrecio,tfPrecio, labelPrecioIva ,tfPrecioIva, 
-            labelStock, tfStock, labelDescripcion, tfDescripcion, 
-            labelImagen, imagenActualizar, labelCategoria, tfCategoria,  
-            labelFechaCreacion , tfFechaCreacion, labelFechaActualizacion , tfFechaActualizacion
+             titulo,labelId, tfpid, labelCodigoBarras, tfpcodigoBarras, labelNombre, tfpNombre, labelPrecio,tfpPrecio, labelPrecioIva ,tfpPrecioIva, 
+            labelStock, tfpStock, labelDescripcion, tfpDescripcion, 
+            labelImagen, imagenActualizar, labelCategoria, tfpCategoria,  
+            labelFechaCreacion , tfpFechaCreacion, labelFechaActualizacion , tfpFechaActualizacion
         );
         VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
 
@@ -564,16 +577,16 @@ public class ControladorVenta implements Initializable {
             if (selectedProduct != null) {
                 System.out.println("Producto seleccionado: " + selectedProduct.getNombre());
 
-                tfNombre.setText(selectedProduct.getNombre());
-                tfPrecio.setText(String.valueOf(selectedProduct.getPrecio()));
-                tfStock.setText(String.valueOf(selectedProduct.getStock()));
-                tfDescripcion.setText(selectedProduct.getDescripcion());
-                tfCategoria.setText(selectedProduct.getCategoria());
-                tfid.setText(String.valueOf(selectedProduct.getId()));
-                tfcodigoBarras.setText(selectedProduct.getCodigo_barras());
-                tfPrecioIva.setText(String.valueOf(selectedProduct.getPrecio_con_iva()));
-                tfFechaActualizacion.setText(String.valueOf(selectedProduct.getFecha_actualizacion()));
-                tfFechaCreacion.setText(String.valueOf(selectedProduct.getFecha_creacion()));
+                tfpNombre.setText(selectedProduct.getNombre());
+                tfpPrecio.setText(String.valueOf(selectedProduct.getPrecio()));
+                tfpStock.setText(String.valueOf(selectedProduct.getStock()));
+                tfpDescripcion.setText(selectedProduct.getDescripcion());
+                tfpCategoria.setText(selectedProduct.getCategoria());
+                tfpid.setText(String.valueOf(selectedProduct.getId()));
+                tfpcodigoBarras.setText(selectedProduct.getCodigo_barras());
+                tfpPrecioIva.setText(String.valueOf(selectedProduct.getPrecio_con_iva()));
+                tfpFechaActualizacion.setText(String.valueOf(selectedProduct.getFecha_actualizacion()));
+                tfpFechaCreacion.setText(String.valueOf(selectedProduct.getFecha_creacion()));
 
                 // Cargar imagen actual del producto
                 if (selectedProduct.getImagenB64() != null && !selectedProduct.getImagenB64().isEmpty()) {
@@ -584,7 +597,8 @@ public class ControladorVenta implements Initializable {
             }
         });
     }
-
+    
+    
     @FXML
     void verPaneSesion(ActionEvent event) {
         paneProductos.setVisible(false);
@@ -592,8 +606,21 @@ public class ControladorVenta implements Initializable {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
+        
+        vboxEditarItem.getChildren().clear();
+        vboxEditarItem.setVisible(true);
+        identificadorTabla = 2;
+        
     }
-
+    private TextField tfuId;
+    private TextField tfuCorreo;
+    private TextField tfuPermisos;
+    private TextField tfuNombre;
+    private TextField tfuApellidos;
+    private TextField tfuTelefono;
+    private TextField tfuDireccion;
+    private TextField tfuFechaRegistro;
+    
     @FXML
     void verPaneUsuarios(ActionEvent event) {
         paneProductos.setVisible(false);
@@ -601,6 +628,56 @@ public class ControladorVenta implements Initializable {
         paneUsuarios.setVisible(true);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
+        vboxEditarItem.getChildren().clear();
+        vboxEditarItem.setVisible(true);
+        identificadorTabla = 3;
+        
+        tfuId = new TextField();
+        tfuCorreo = new TextField();
+        tfuPermisos = new TextField();
+        tfuNombre = new TextField();
+        tfuApellidos = new TextField();
+        tfuTelefono = new TextField();
+        tfuDireccion = new TextField();
+        tfuFechaRegistro = new TextField();
+        tfuId.setEditable(false);
+        tfuFechaRegistro.setEditable(false);
+        
+        Label titulo = new Label("Editar usuario:");
+        titulo.setStyle("-fx-font-size: 20px;");
+        Label labelId = new Label("ID:");
+        Label labelCorreo = new Label("Correo:");
+        Label labelPermisos = new Label("Permisos:");
+        Label labelNombre = new Label("Nombre:");
+        Label labelApellidos = new Label("Apellidos:");
+        Label labelTelefono = new Label("Teléfono:");
+        Label labelDireccion = new Label("Dirección:");
+        Label labelFechaRegistro = new Label("Fecha de registro:");
+        
+        vboxEditarItem.getChildren().addAll(titulo,
+                labelId, tfuId, labelCorreo, tfuCorreo, labelPermisos, tfuPermisos,
+                labelNombre, tfuNombre, labelApellidos, tfuApellidos, labelTelefono,
+                tfuTelefono, labelDireccion, tfuDireccion, labelFechaRegistro, tfuFechaRegistro
+        );
+        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+
+        vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
+        vboxEditarItem.setSpacing(10);
+        vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
+
+        tablaUsuarios.getSelectionModel().selectedItemProperty().addListener((observable, oldUsuario, selectedUsuario) -> {
+            if (selectedUsuario != null) {
+
+                tfuId.setText(String.valueOf(selectedUsuario.getId()));
+                tfuCorreo.setText(String.valueOf(selectedUsuario.getCorreo()));
+                tfuPermisos.setText(String.valueOf(selectedUsuario.getRol()));
+                tfuNombre.setText(selectedUsuario.getNombre());
+                tfuApellidos.setText(selectedUsuario.getApellido());
+                tfuTelefono.setText(String.valueOf(selectedUsuario.getTelefono()));
+                tfuDireccion.setText(selectedUsuario.getDireccion());
+                tfuFechaRegistro.setText(String.valueOf(selectedUsuario.getFecha_registro()));
+            }
+        });
     }
 
     @FXML
@@ -993,65 +1070,6 @@ public class ControladorVenta implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         vboxEditarItem.setVisible(false);
-        
-        tablaProductosAdmin.setEditable(true);
-
-        pColumnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnPrecio.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        pColumnStock.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-        pColumnDescripcion.setCellFactory(TextFieldTableCell.forTableColumn());
-        //pColumnImagen.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnCategoria.setCellFactory(TextFieldTableCell.forTableColumn());
-
-
-        pColumnNombre.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnNombre.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setNombre(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });
-
-        pColumnPrecio.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
-        pColumnPrecio.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setPrecio(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });
-
-        pColumnStock.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-        pColumnStock.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setStock(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });
-
-        pColumnDescripcion.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnDescripcion.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setDescripcion(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });
-
-        // Imagen (Base64)
-        /*pColumnImagen.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnImagen.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setImagenB64(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });*/
-        
-        
-        
-        pColumnCategoria.setCellFactory(TextFieldTableCell.forTableColumn());
-        pColumnCategoria.setOnEditCommit(e -> {
-            Producto p = e.getRowValue();
-            p.setCategoria(e.getNewValue());
-            productoDAO.actualizarProducto(p);
-        });
-
-        tablaProductosAdmin.setEditable(true);
-
-        
         
         
         try {
