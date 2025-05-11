@@ -15,22 +15,34 @@ public class Venta {
     int cliente_id;
     int empleado_id;
     Date fecha;
+    String descripcion;
+
+    
     double total;
     String metodo_pago;
     String tipo_venta;
     String estado;
 
-    public Venta(int id, int cliente_id, int empleado_id, Date fecha, double total, String metodo_pago, String tipo_venta, String estado) {
+    public Venta(int id, int cliente_id, int empleado_id, Date fecha, String descripcion, double total, String metodo_pago, String tipo_venta, String estado) {
         this.id = id;
         this.cliente_id = cliente_id;
         this.empleado_id = empleado_id;
         this.fecha = fecha;
+        this.descripcion = descripcion;
         this.total = total;
         this.metodo_pago = metodo_pago;
         this.tipo_venta = tipo_venta;
         this.estado = estado;
     }
+    
+    public String getDescripcion() {
+        return descripcion;
+    }
 
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+    
     public int getId() {
         return id;
     }

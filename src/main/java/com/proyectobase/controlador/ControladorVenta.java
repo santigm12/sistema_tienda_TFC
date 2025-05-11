@@ -280,6 +280,9 @@ public class ControladorVenta implements Initializable {
     private TableColumn<Venta, Double> vColumnTotal;
     
     @FXML
+    private TableColumn<Venta, String> vColumnDescripcion;
+    
+    @FXML
     private TableView<CodigoBarras> tablaCodigoBarras;
     
     @FXML
@@ -956,6 +959,7 @@ private boolean existeCorreoEnLista(String correo) {
                             rs.getInt("cliente_id"),
                             rs.getInt("empleado_id"),
                             rs.getDate("fecha"), 
+                            rs.getString("descripcion"),
                             rs.getDouble("total"),
                             rs.getString("metodo_pago"),
                             rs.getString("tipo_venta"),
@@ -1105,6 +1109,7 @@ private boolean existeCorreoEnLista(String correo) {
             vColumnCliente.setCellValueFactory(new PropertyValueFactory<>("cliente_id"));
             vColumnEmpleado.setCellValueFactory(new PropertyValueFactory<>("empleado_id"));
             vColumnFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+            vColumnDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
             vColumnTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
             vColumnMetodoPago.setCellValueFactory(new PropertyValueFactory<>("metodo_pago"));
             vColumnTipoVenta.setCellValueFactory(new PropertyValueFactory<>("tipo_venta"));
