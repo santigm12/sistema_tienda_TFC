@@ -31,9 +31,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.Normalizer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.function.Function;
@@ -52,7 +57,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -388,7 +395,39 @@ public class ControladorVenta implements Initializable {
             }
             
             case 4 -> {
-            
+                String query = "UPDATE ventas SET cliente_id=?, empleado_id=?, fecha=?, descripcion=?, total=?, metodo_pago=?, tipo_venta=?, estado=? WHERE id=?";
+                int idCliente = 0;
+                int idEmpleado = 0;
+                        for(Usuario usuario : lstUsuarios){
+                            String usuarioNombreYapellidos = usuario.getNombre()+" "+usuario.getApellido();
+                            if(usuarioNombreYapellidos.equals(cbCliente.getValue())){
+                                idCliente = usuario.getId();
+                            }
+                            
+                            if(usuarioNombreYapellidos.equals(cbEmpleado.getValue())){
+                                idEmpleado = usuario.getId();
+                            }
+                        }
+                
+                        try {
+                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
+                            preparedStatement.setInt(1, idCliente);
+                            preparedStatement.setInt(2, idEmpleado);
+                            preparedStatement.setString(3, dpFecha.getValue().toString());
+                            preparedStatement.setString(4, tfvDescripcion.getText());
+                            preparedStatement.setDouble(5, Double.parseDouble(tfvTotal.getText()));
+                            preparedStatement.setString(6, tfvMetodoPago.getText());
+                            preparedStatement.setString(7, tfvTipoVenta.getText());
+                            preparedStatement.setString(8, tfvEstado.getText());
+                            preparedStatement.setInt(9, Integer.parseInt(tfvId.getText()));
+                            preparedStatement.executeUpdate();
+                        } catch (SQLException ex) {
+                            System.out.println("Excepción: "+ex.getMessage());
+                        }catch (IllegalArgumentException e){
+                            System.out.println("El número introducido no es correcto");
+                        }
+                        tablaVentas.getItems().clear();
+                        tablaVentas.setItems(obtenerListaVentas());
             }
             
             case 5 -> {
@@ -787,7 +826,16 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
     }
-
+    private TextField tfvId;
+    private ComboBox<String> cbCliente;
+    private ComboBox<String> cbEmpleado;
+    private DatePicker dpFecha;
+    private TextField tfvDescripcion;
+    private TextField tfvTotal;
+    private TextField tfvMetodoPago;
+    private TextField tfvTipoVenta;
+    private TextField tfvEstado;
+    
     @FXML
     void verPaneVentas(ActionEvent event) {
         paneProductos.setVisible(false);
@@ -795,6 +843,82 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(true);
         paneCodigoBarras.setVisible(false);
+        
+        vboxEditarItem.getChildren().clear();
+        vboxEditarItem.setVisible(true);
+        identificadorTabla = 4;
+        
+        tfvId = new TextField();
+        cbCliente = new ComboBox();
+        cbEmpleado = new ComboBox();
+        dpFecha = new DatePicker();
+        tfvDescripcion = new TextField();
+        tfvTotal = new TextField();
+        tfvMetodoPago = new TextField();
+        tfvTipoVenta = new TextField();
+        tfvTipoVenta = new TextField();
+        tfvEstado = new TextField();
+        tfvId.setEditable(false);
+        
+        Label titulo = new Label("Editar venta: ");
+        titulo.setStyle("-fx-font-size: 20px;");
+        Label labelId = new Label("ID:");
+        Label labelCliente = new Label ("Cliente:");
+        Label labelEmpleado = new Label ("Empleado");
+        Label labelFecha = new Label ("Fecha:");
+        Label labelDescripcion = new Label("Descripción:");
+        Label labelTotal = new Label("Total:");
+        Label labelMetodoPago = new Label("Método de pago:");
+        Label labelTipoVenta = new Label("Tipo de venta:");
+        Label labelEstado = new Label ("Estado:");
+        
+        vboxEditarItem.getChildren().addAll(titulo, labelId, tfvId, labelCliente, cbCliente,
+                labelEmpleado, cbEmpleado, labelFecha, dpFecha, labelDescripcion, tfvDescripcion,
+                labelTotal, tfvTotal, labelMetodoPago, tfvMetodoPago, labelTipoVenta, tfvTipoVenta,
+                labelEstado, tfvEstado);
+        
+        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+
+        vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
+        vboxEditarItem.setSpacing(10);
+        vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        List<String> listaClientes = new ArrayList();
+        List<String> listaEmpleados = new ArrayList();
+        for(int i = 0; i<lstUsuarios.size(); i++){
+            if(lstUsuarios.get(i).getRol().equals("Cliente") || lstUsuarios.get(i).getRol().equals("cliente")){
+                listaClientes.add(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+            }else{
+                listaEmpleados.add(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+            }
+        }
+        
+        cbCliente.getItems().addAll(listaClientes);
+        cbEmpleado.getItems().addAll(listaEmpleados);
+        
+        tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
+            if (selectedVenta != null) {
+
+                tfvId.setText(String.valueOf(selectedVenta.getId()));
+                cbCliente.getItems().addAll();
+                for(int i = 0; i<lstUsuarios.size(); i++){
+                    if(lstUsuarios.get(i).getId() == selectedVenta.getCliente_id()){
+                        cbCliente.setValue(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+                    }
+                    
+                    if(lstUsuarios.get(i).getId() == selectedVenta.getEmpleado_id()){
+                        cbEmpleado.setValue(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+                    }
+                }
+                System.out.println(selectedVenta.getFecha().toString());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                dpFecha.setValue(LocalDate.parse(selectedVenta.getFecha().toString(), formatter));
+                tfvDescripcion.setText(selectedVenta.getDescripcion());
+                tfvTotal.setText(String.valueOf(selectedVenta.getTotal()));
+                tfvMetodoPago.setText(selectedVenta.getMetodo_pago());
+                tfvTipoVenta.setText(String.valueOf(selectedVenta.getTipo_venta()));
+                tfvEstado.setText(selectedVenta.getEstado());
+            }
+        });
     }
     
     @FXML
