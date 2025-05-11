@@ -13,6 +13,7 @@ import com.proyectobase.modelo.Sesion;
 import com.proyectobase.modelo.Usuario;
 import com.proyectobase.modelo.UsuarioDAO;
 import com.proyectobase.modelo.Venta;
+import com.proyectobase.modelo.VentaDAO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -102,6 +103,7 @@ public class ControladorVenta implements Initializable {
     
     private ProductoDAO productoDAO;
     private UsuarioDAO usuarioDAO;
+    private VentaDAO ventaDAO;
     ObservableList<Producto> lstProductos = FXCollections.observableArrayList();
     ObservableList<Producto> lstProductosEscaneados = FXCollections.observableArrayList();
     
@@ -605,6 +607,34 @@ private boolean existeCorreoEnLista(String correo) {
                     boolean exito = usuarioDAO.insertarUsuario(usuarioNuevo);
                     if (exito) {
                         lstUsuarios.add(usuarioNuevo); 
+                        System.out.println("Usuario insertado con éxito");
+                    } else {
+                        System.out.println("No se pudo insertar el usuario en la base de datos");
+                    }
+
+                } catch (Exception e) {
+                    System.err.println("Error al insertar el usuario: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            
+            case 4 -> {
+                try{
+                    Venta ventaNueva = new Venta(
+                        lstVentas.size()+1,
+                            1,
+                            1,
+                            new Date(),
+                            "",
+                            0.0,
+                            "",
+                            "",
+                            ""
+                    );
+
+                    boolean exito = ventaDAO.insertarVenta(ventaNueva);
+                    if (exito) {
+                        lstVentas.add(ventaNueva); 
                         System.out.println("Usuario insertado con éxito");
                     } else {
                         System.out.println("No se pudo insertar el usuario en la base de datos");
@@ -1310,6 +1340,7 @@ private boolean existeCorreoEnLista(String correo) {
             conexion = ConexionSingleton.obtenerConexion();
             this.productoDAO = new ProductoDAO(conexion);
             this.usuarioDAO = new UsuarioDAO(conexion);
+            this.ventaDAO = new VentaDAO(conexion);
             if (conexion != null) {
                 this.st = conexion.createStatement();
             }

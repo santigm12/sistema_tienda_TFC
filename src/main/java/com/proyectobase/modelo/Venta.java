@@ -12,8 +12,8 @@ import java.util.Date;
  */
 public class Venta {
     int id;
-    int cliente_id;
-    int empleado_id;
+    Integer cliente_id;
+    Integer empleado_id;
     Date fecha;
     String descripcion;
 
@@ -34,6 +34,8 @@ public class Venta {
         this.tipo_venta = tipo_venta;
         this.estado = estado;
     }
+    
+    
     
     public String getDescripcion() {
         return descripcion;
