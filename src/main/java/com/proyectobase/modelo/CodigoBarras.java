@@ -8,13 +8,15 @@ import java.util.Date;
  */
 public class CodigoBarras {
     String codigo;
-    int utilizado;
+    int producto_asignado;
+
+    
     Date fecha_generacion;
     int usuario_generador;
 
-    public CodigoBarras(String codigo, int utilizado, Date fecha_generacion, int usuario_generador) {
+    public CodigoBarras(String codigo, int producto_asignado, Date fecha_generacion, int usuario_generador) {
         this.codigo = codigo;
-        this.utilizado = utilizado;
+        this.producto_asignado = producto_asignado;
         this.fecha_generacion = fecha_generacion;
         this.usuario_generador = usuario_generador;
     }
@@ -27,12 +29,12 @@ public class CodigoBarras {
         this.codigo = codigo;
     }
 
-    public int getUtilizado() {
-        return utilizado;
+    public int getProducto_asignado() {
+        return producto_asignado;
     }
 
-    public void setUtilizado(int utilizado) {
-        this.utilizado = utilizado;
+    public void setProducto_asignado(int producto_asignado) {
+        this.producto_asignado = producto_asignado;
     }
 
     public Date getFecha_generacion() {

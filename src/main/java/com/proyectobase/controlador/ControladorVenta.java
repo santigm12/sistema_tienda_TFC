@@ -50,6 +50,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -82,6 +83,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
@@ -301,7 +303,7 @@ public class ControladorVenta implements Initializable {
     private TableColumn<CodigoBarras, Date> cbColumnFechaGeneracion;
 
     @FXML
-    private TableColumn<CodigoBarras, Integer> cbColumnUtilizado;
+    private TableColumn<CodigoBarras, Integer> cbColumnProductoAsignado;
     
     @FXML
     private TableColumn<CodigoBarras, Integer> cbColumnUsuarioGenerador;
@@ -433,7 +435,39 @@ public class ControladorVenta implements Initializable {
             }
             
             case 5 -> {
-            
+                String query = "UPDATE codigos_barras SET cliente_id=?, empleado_id=?, fecha=?, descripcion=?, total=?, metodo_pago=?, tipo_venta=?, estado=? WHERE id=?";
+                int idCliente = 0;
+                int idEmpleado = 0;
+                        for(Usuario usuario : lstUsuarios){
+                            String usuarioNombreYapellidos = usuario.getNombre()+" "+usuario.getApellido();
+                            if(usuarioNombreYapellidos.equals(cbCliente.getValue())){
+                                idCliente = usuario.getId();
+                            }
+                            
+                            if(usuarioNombreYapellidos.equals(cbEmpleado.getValue())){
+                                idEmpleado = usuario.getId();
+                            }
+                        }
+                
+                        try {
+                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
+                            preparedStatement.setInt(1, idCliente);
+                            preparedStatement.setInt(2, idEmpleado);
+                            preparedStatement.setString(3, dpFecha.getValue().toString());
+                            preparedStatement.setString(4, tfvDescripcion.getText());
+                            preparedStatement.setDouble(5, Double.parseDouble(tfvTotal.getText()));
+                            preparedStatement.setString(6, tfvMetodoPago.getText());
+                            preparedStatement.setString(7, tfvTipoVenta.getText());
+                            preparedStatement.setString(8, tfvEstado.getText());
+                            preparedStatement.setInt(9, Integer.parseInt(tfvId.getText()));
+                            preparedStatement.executeUpdate();
+                        } catch (SQLException ex) {
+                            System.out.println("Excepción: "+ex.getMessage());
+                        }catch (IllegalArgumentException e){
+                            System.out.println("El número introducido no es correcto");
+                        }
+                        tablaVentas.getItems().clear();
+                        tablaVentas.setItems(obtenerListaVentas());
             }
         }
     }
@@ -951,6 +985,61 @@ private boolean existeCorreoEnLista(String correo) {
         });
     }
     
+    private TextField tfcCodigo;
+    private TextField tfcProductoAsignado;
+    private TextField tfcFechaGeneracion;
+    private TextField tfcUsuarioGenerador;
+    private ImageView imagenCB;
+    private Button btnDescargar;
+    
+    
+    
+    
+    @FXML
+private void descargarImagen() {
+    if (imagenCB == null) {
+        return;
+    }
+
+    FileChooser fileChooser = new FileChooser();
+    fileChooser.setTitle("Guardar código de barras");
+    fileChooser.setInitialFileName("codigo_barras.png");
+    fileChooser.getExtensionFilters().addAll(
+        new FileChooser.ExtensionFilter("Imagen PNG", "*.png"),
+        new FileChooser.ExtensionFilter("Imagen JPEG", "*.jpg", "*.jpeg")
+    );
+
+    File archivo = fileChooser.showSaveDialog(btnDescargar.getScene().getWindow());
+    
+    if (archivo != null) {
+        try {
+            // Asegurar la extensión correcta
+            String nombreArchivo = archivo.getName().toLowerCase();
+            String formato;
+            
+            if (nombreArchivo.endsWith(".jpg") || nombreArchivo.endsWith(".jpeg")) {
+                formato = "jpg";
+            } else {
+                // Por defecto usamos PNG
+                if (!nombreArchivo.endsWith(".png")) {
+                    archivo = new File(archivo.getAbsolutePath() + ".png");
+                }
+                formato = "png";
+            }
+
+            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(imagenCB.getImage(), null);
+            
+
+            // Guardar la imagen
+            boolean exito = ImageIO.write(bufferedImage, formato, archivo);
+            
+           
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+    
     @FXML
     void verPaneCodigoBarras(ActionEvent event) {
         paneProductos.setVisible(false);
@@ -958,6 +1047,48 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(true);
+        
+        vboxEditarItem.getChildren().clear();
+        vboxEditarItem.setVisible(true);
+        identificadorTabla = 5;
+        
+        tfcCodigo = new TextField();
+        tfcProductoAsignado = new TextField();
+        tfcFechaGeneracion = new TextField();
+        tfcUsuarioGenerador = new TextField();
+        imagenCB = new ImageView();
+        
+        
+        
+        Label titulo = new Label("Información código de barras: ");
+        titulo.setStyle("-fx-font-size: 20px;");
+        Label labelCodigo = new Label("Codigo: ");
+        Label labelProducto = new Label("Producto asignado: ");
+        Label labelFechaGen = new Label ("Fecha generación: ");
+        Label labelUsuarioGen = new Label("Usuario generador: ");
+        Label labelImagen = new Label("Imagen: ");
+        
+        vboxEditarItem.getChildren().addAll(titulo, labelCodigo, tfcCodigo,
+                labelProducto, tfcProductoAsignado, labelFechaGen, tfcFechaGeneracion,
+                labelUsuarioGen, tfcUsuarioGenerador, labelImagen, imagenCB, btnDescargar);
+        
+        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+
+        vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
+        vboxEditarItem.setSpacing(10);
+        vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        
+        tablaCodigoBarras.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedCodigo) -> {
+            if (selectedCodigo != null) {
+                
+                tfcCodigo.setText(selectedCodigo.getCodigo());
+                tfcFechaGeneracion.setText(String.valueOf(selectedCodigo.getFecha_generacion()));
+                tfcProductoAsignado.setText(String.valueOf(selectedCodigo.getProducto_asignado()));
+                tfcUsuarioGenerador.setText(String.valueOf(selectedCodigo.getUsuario_generador()));
+                imagenCB.setImage(generarImagenCodigoBarras(selectedCodigo.getCodigo()));
+                
+            }
+        });
     }
     
     public static String generarCodigoBarras() {
@@ -982,28 +1113,34 @@ private boolean existeCorreoEnLista(String correo) {
     }
     
     
-    public boolean generarImagenCodigoBarras(String data) {
+        public Image generarImagenCodigoBarras(String data) {
         try {
+            // Crear la matriz de bits del código de barras
             BitMatrix bitMatrix = new MultiFormatWriter()
                     .encode(data, BarcodeFormat.CODE_128, 300, 150);
 
-            WritableImage writableImage = new WritableImage(bitMatrix.getWidth(), bitMatrix.getHeight());
+            // Crear imagen escribible con las dimensiones del código de barras
+            WritableImage writableImage = new WritableImage(
+                bitMatrix.getWidth(), 
+                bitMatrix.getHeight()
+            );
+
             PixelWriter pixelWriter = writableImage.getPixelWriter();
 
+            // Rellenar la imagen con píxeles blancos y negros según la matriz
             for (int y = 0; y < bitMatrix.getHeight(); y++) {
                 for (int x = 0; x < bitMatrix.getWidth(); x++) {
-                    pixelWriter.setColor(x, y, bitMatrix.get(x, y) ? javafx.scene.paint.Color.BLACK : javafx.scene.paint.Color.WHITE);
+                    Color color = bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE;
+                    pixelWriter.setColor(x, y, color);
                 }
             }
 
-            imagenCodigo.setImage(writableImage);
+            return writableImage;
 
-            System.out.println("Código de barras generado y mostrado en memoria.");
-
-            return true;
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            return false;
+            System.err.println("Error al generar código de barras: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -1161,7 +1298,7 @@ private boolean existeCorreoEnLista(String correo) {
                 while (rs.next()) { 
                     cb = new CodigoBarras(
                             rs.getString("codigo"), 
-                            rs.getInt("utilizado"),
+                            rs.getInt("producto_asignado"),
                             rs.getDate("fecha_generacion"),
                             rs.getInt("usuario_generador"));
                     lstCodigoBarras.add(cb);
@@ -1296,7 +1433,7 @@ private boolean existeCorreoEnLista(String correo) {
         try {
             cbColumnCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
             cbColumnFechaGeneracion.setCellValueFactory(new PropertyValueFactory<>("fecha_generacion"));
-            cbColumnUtilizado.setCellValueFactory(new PropertyValueFactory<>("utilizado"));
+            cbColumnProductoAsignado.setCellValueFactory(new PropertyValueFactory<>("producto_asignado"));
             cbColumnUsuarioGenerador.setCellValueFactory(new PropertyValueFactory<>("usuario_generador"));
             
             tablaCodigoBarras.setItems(lstCodigoBarras);
@@ -1334,7 +1471,8 @@ private boolean existeCorreoEnLista(String correo) {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         vboxEditarItem.setVisible(false);
-        
+        btnDescargar = new Button("Descargar");
+        btnDescargar.setOnAction(event -> descargarImagen());
         
         try {
             conexion = ConexionSingleton.obtenerConexion();

@@ -191,10 +191,10 @@
                                 <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                               </columnResizePolicy>
                               <columns>
-                                <TableColumn fx:id="cbColumnUsuarioGenerador" text="Usuario generador" />
                                 <TableColumn fx:id="cbColumnCodigo" text="Codigo" />
-                                <TableColumn fx:id="cbColumnUtilizado" text="Utilizado" />
+                                <TableColumn fx:id="cbColumnProductoAsignado" text="Producto asignado" />
                                 <TableColumn fx:id="cbColumnFechaGeneracion" text="Fecha generación" />
+                                <TableColumn fx:id="cbColumnUsuarioGenerador" text="Usuario generador" />
                               </columns>
                             </TableView>
                           </children>
