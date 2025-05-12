@@ -9,6 +9,9 @@ import java.sql.Types;
 import java.sql.Timestamp;
 import java.text.Normalizer;
 import java.util.Date;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import org.controlsfx.control.Notifications;
 
 public class UsuarioDAO {
     private final Connection connection;
@@ -157,16 +160,84 @@ public class UsuarioDAO {
         }
     }
 
-    public boolean eliminarUsuario(int id) {
-        String sql = "DELETE FROM usuarios WHERE id = ?";
-        
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+    public boolean eliminarUsuario(Usuario usuario) {
+        if (usuario == null || usuario.getId() == 0) {
+            System.err.println("Error: Usuario no válido para eliminar");
+            Notifications.create()
+                .title("Error")
+                .text("Usuario no válido para eliminar")
+                .showError();
+            return false;
+        }
+
+        // Verificar todas las relaciones posibles
+        try {
+            // 1. Verificar si es cliente en ventas (cliente_id)
+            if (tieneVentasComoCliente(usuario.getId())) {
+                throw new SQLException("No se puede eliminar: el usuario tiene ventas asociadas como cliente");
+            }
+
+            // 2. Verificar si es empleado en ventas (empleado_id)
+            if (tieneVentasComoEmpleado(usuario.getId())) {
+                throw new SQLException("No se puede eliminar: el usuario tiene ventas asociadas como empleado");
+            }
+
+            // 3. Verificar si generó códigos de barras
+            if (tieneRelacionesEnTabla(usuario.getId(), "codigos_barras", "usuario_generador")) {
+                throw new SQLException("No se puede eliminar: el usuario generó códigos de barras");
+            }
+
+            // 4. Verificar sesiones activas
+            if (tieneRelacionesEnTabla(usuario.getId(), "sesiones", "usuario_id")) {
+                throw new SQLException("No se puede eliminar: el usuario tiene sesiones activas");
+            }
+
+            // Si pasa todas las validaciones, proceder con eliminación
+            String sql = "DELETE FROM usuarios WHERE id = ?";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, usuario.getId());
+
+                int filasAfectadas = stmt.executeUpdate();
+
+                if (filasAfectadas > 0) {
+                    Notifications.create()
+                        .title("Éxito")
+                        .text("Usuario eliminado correctamente")
+                        .showInformation();
+                    return true;
+                }
+                return false;
+            }
         } catch (SQLException ex) {
             System.err.println("Error al eliminar usuario: " + ex.getMessage());
-            ex.printStackTrace();
+            Notifications.create()
+                .title("Error al eliminar")
+                .text(ex.getMessage())
+                .showError();
             return false;
+        }
+    }
+
+    // Métodos auxiliares específicos para ventas
+    private boolean tieneVentasComoCliente(int usuarioId) throws SQLException {
+        return tieneRelacionesEnTabla(usuarioId, "ventas", "cliente_id");
+    }
+
+    private boolean tieneVentasComoEmpleado(int usuarioId) throws SQLException {
+        return tieneRelacionesEnTabla(usuarioId, "ventas", "empleado_id");
+    }
+
+    // Método auxiliar genérico
+    private boolean tieneRelacionesEnTabla(int usuarioId, String tabla, String columna) throws SQLException {
+        String sql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", tabla, columna);
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, usuarioId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
         }
     }
     

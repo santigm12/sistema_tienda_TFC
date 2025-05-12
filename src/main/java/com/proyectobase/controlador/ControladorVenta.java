@@ -474,54 +474,18 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     void eliminarItem(ActionEvent event) {
-        /*try{
-            clienteSeleccionado = tablaClientes.getSelectionModel().getSelectedItem();
-            String mensajeEliminar = "";
-            for(Venta v  : obtenerListaVentas()){
-                if(v.getIdCliente() == clienteSeleccionado.getIdCliente()){
-                    mensajeEliminar = "Este cliente tiene ventas asociadas ¿desea eliminar las ventas y el cliente con id ";
-                    break;
-                }else{
-                    mensajeEliminar = "¿Desea eliminar el cliente con id ";
-                }
-            }      
-            Alert alertaSalir = new Alert(Alert.AlertType.CONFIRMATION, mensajeEliminar+clienteSeleccionado.getIdCliente()+" ("+clienteSeleccionado.getNombre()+" "+clienteSeleccionado.getApellidos()+")?", ButtonType.NO, ButtonType.YES);
-            alertaSalir.setTitle("Eliminar");
-            alertaSalir.setHeaderText(null);
-            alertaSalir.showAndWait().ifPresent(response ->{
-                if(response == ButtonType.YES){
-                    if(clienteSeleccionado == null){
-                        alerta.show();
-                    }else{
-                        String query = "DELETE FROM Cliente WHERE id_cliente=?";
-                        try {
-                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
-                            preparedStatement.setInt(1, tablaClientes.getSelectionModel().getSelectedItem().getIdCliente());
-                            preparedStatement.executeUpdate();
-                            Notifications.create() 
-                                .title("Eliminar") 
-                                .text("El cliente se ha eliminado correctamente")
-                                .graphic(iconoBien)
-                                .owner(stackPane)
-                                .show();
-                        } catch (SQLException e) {
-                            System.out.println("Excepción: "+e.getMessage());
-                            Notifications.create() 
-                                .title("Eliminar") 
-                                .text("No se ha eliminado el cliente")
-                                .graphic(iconoBien)
-                                .owner(stackPane)
-                                .show();
-                        }
-                        tablaClientes.setItems(obtenerListaClientes());
-                        tablaVentas.setItems(obtenerListaVentas());
-                    }
-                }
-            });         
-        }catch (Exception ex) {
-            clienteSeleccionado = null;
-            alerta.show();
-        }*/
+        switch (identificadorTabla) {
+            //case 1 -> 
+            //case 2 -> 
+            case 3 -> {
+                usuarioDAO.eliminarUsuario(tablaUsuarios.getSelectionModel().getSelectedItem());
+                tablaUsuarios.getItems().clear();
+                tablaUsuarios.setItems(obtenerListaUsuarios());
+            }
+            
+            //case 4 -> 
+            //case 5 -> 
+        }
     }
     
     private String generarCorreoUnico(String nombre, String apellido) {
