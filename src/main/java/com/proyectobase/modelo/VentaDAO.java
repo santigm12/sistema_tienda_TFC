@@ -9,6 +9,7 @@ import com.proyectobase.modelo.Venta;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.controlsfx.control.Notifications;
 
 public class VentaDAO {
     private final Connection connection;
@@ -106,16 +107,45 @@ public class VentaDAO {
         }
     }
 
-    // Método para eliminar una venta
-    public boolean eliminarVenta(int id) {
-        String sql = "DELETE FROM ventas WHERE id = ?";
-        
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+    
+    
+    
+    public boolean eliminarVenta(Venta venta) {
+        if (venta == null || venta.getId() == 0) {
+            System.err.println("Error: Venta no válida para eliminar");
+            Notifications.create()
+                .title("Error")
+                .text("Venta no válida para eliminar")
+                .showError();
+            return false;
+        }
+
+        // Verificar todas las relaciones posibles
+        try {
+            
+            // Si pasa todas las validaciones, proceder con eliminación
+            String sql = "DELETE FROM ventas WHERE id = ?";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setInt(1, venta.getId());
+
+                int filasAfectadas = stmt.executeUpdate();
+
+                if (filasAfectadas > 0) {
+                    Notifications.create()
+                        .title("Éxito")
+                        .text("Venta eliminada correctamente")
+                        .showInformation();
+                    return true;
+                }
+                return false;
+            }
         } catch (SQLException ex) {
-            System.err.println("Error al eliminar venta: " + ex.getMessage());
-            ex.printStackTrace();
+            System.err.println("Error al eliminar la venta: " + ex.getMessage());
+            Notifications.create()
+                .title("Error al eliminar")
+                .text(ex.getMessage())
+                .showError();
             return false;
         }
     }

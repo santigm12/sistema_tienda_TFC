@@ -483,7 +483,11 @@ public class ControladorVenta implements Initializable {
                 tablaUsuarios.setItems(obtenerListaUsuarios());
             }
             
-            //case 4 -> 
+            case 4 -> { 
+                ventaDAO.eliminarVenta(tablaVentas.getSelectionModel().getSelectedItem()); 
+                tablaVentas.getItems().clear();
+                tablaVentas.setItems(obtenerListaVentas());
+            }
             //case 5 -> 
         }
     }
