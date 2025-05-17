@@ -4,6 +4,8 @@
  */
 package com.proyectobase.modelo;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 
 /**
@@ -14,7 +16,7 @@ public class Venta {
     int id;
     Integer cliente_id;
     Integer empleado_id;
-    Date fecha;
+    LocalDate fecha;
     String descripcion;
 
     
@@ -23,7 +25,7 @@ public class Venta {
     String tipo_venta;
     String estado;
 
-    public Venta(int id, int cliente_id, int empleado_id, Date fecha, String descripcion, double total, String metodo_pago, String tipo_venta, String estado) {
+    public Venta(int id, int cliente_id, int empleado_id, LocalDate fecha, String descripcion, double total, String metodo_pago, String tipo_venta, String estado) {
         this.id = id;
         this.cliente_id = cliente_id;
         this.empleado_id = empleado_id;
@@ -35,8 +37,7 @@ public class Venta {
         this.estado = estado;
     }
     
-    
-    
+        
     public String getDescripcion() {
         return descripcion;
     }
@@ -69,11 +70,11 @@ public class Venta {
         this.empleado_id = empleado_id;
     }
 
-    public Date getFecha() {
+    public LocalDate getFecha() {
         return fecha;
     }
 
-    public void setFecha(Date fecha) {
+    public void setFecha(LocalDate fecha) {
         this.fecha = fecha;
     }
 

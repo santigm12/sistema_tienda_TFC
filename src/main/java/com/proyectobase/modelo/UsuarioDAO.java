@@ -21,80 +21,135 @@ public class UsuarioDAO {
     }
 
     public boolean insertarUsuario(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (correo, password_hash, rol, nombre, apellido, telefono, direccion, fecha_registro, activo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet generatedKeys = null;
-        
-        try {
-            // Obtener conexión verificando si está cerrada
-            conn = ConexionSingleton.obtenerConexion();
-            if (conn == null || conn.isClosed()) {
-                System.err.println("Conexión cerrada. Reconectando...");
-                conn = ConexionSingleton.obtenerConexion();
-                if (conn == null) {
-                    System.err.println("No se pudo reestablecer la conexión");
-                    return false;
-                }
-            }
-
-            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-
-            // Setear parámetros
-            stmt.setString(1, usuario.getCorreo());
-            stmt.setString(2, usuario.getPassword_hash());
-            stmt.setString(3, usuario.getRol());
-            stmt.setString(4, usuario.getNombre());
-            stmt.setString(5, usuario.getApellido());
-            
-            // Manejar teléfono nulo
-            if (usuario.getTelefono() == null) {
-                stmt.setNull(6, Types.VARCHAR);
-            } else {
-                stmt.setString(6, usuario.getTelefono());
-            }
-            
-            // Manejar dirección nula
-            if (usuario.getDireccion() == null) {
-                stmt.setNull(7, Types.VARCHAR);
-            } else {
-                stmt.setString(7, usuario.getDireccion());
-            }
-            
-            stmt.setTimestamp(8, new Timestamp(usuario.getFecha_registro().getTime()));
-            stmt.setInt(9, usuario.getActivo());
-
-            int filas = stmt.executeUpdate();
-
-            if (filas > 0) {
-                generatedKeys = stmt.getGeneratedKeys();
-                if (generatedKeys != null && generatedKeys.next()) {
-                    usuario.setId(generatedKeys.getInt(1));
-                }
-                return true;
-            }
-        } catch (SQLException ex) {
-            System.err.println("Error al insertar usuario: " + ex.getMessage());
-            ex.printStackTrace();
-            
-            // Intenta reconectar si hay error de conexión
-            if (ex.getMessage().contains("Connection is closed")) {
-                System.err.println("Intentando reconectar...");
-                ConexionSingleton.reconectar();
-            }
-        } finally {
-            // Cerrar solo los recursos temporales
-            try {
-                if (generatedKeys != null) generatedKeys.close();
-                if (stmt != null) stmt.close();
-            } catch (SQLException e) {
-                System.err.println("Error al cerrar recursos: " + e.getMessage());
-            }
-        }
+    if (usuario == null) {
+        System.err.println("Error: Usuario no puede ser nulo");
+        Notifications.create()
+            .title("Error")
+            .text("Usuario no válido para insertar")
+            .showError();
         return false;
     }
+
+    Connection conn = null;
+    PreparedStatement stmtUsuario = null;
+    PreparedStatement stmtSesion = null;
+    ResultSet generatedKeys = null;
+    boolean exito = false;
+
+    try {
+        // Obtener conexión
+        conn = ConexionSingleton.obtenerConexion();
+        if (conn == null || conn.isClosed()) {
+            System.err.println("Conexión cerrada. Reconectando...");
+            conn = ConexionSingleton.obtenerConexion();
+            if (conn == null) {
+                System.err.println("No se pudo reestablecer la conexión");
+                return false;
+            }
+        }
+
+        // Iniciar transacción
+        conn.setAutoCommit(false);
+
+        // 1. Insertar el usuario
+        String sqlUsuario = "INSERT INTO usuarios (correo, password_hash, rol, nombre, apellido, telefono, direccion, fecha_registro, activo) " +
+                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        stmtUsuario = conn.prepareStatement(sqlUsuario, Statement.RETURN_GENERATED_KEYS);
+
+        // Setear parámetros del usuario
+        stmtUsuario.setString(1, usuario.getCorreo());
+        stmtUsuario.setString(2, usuario.getPassword_hash());
+        stmtUsuario.setString(3, usuario.getRol());
+        stmtUsuario.setString(4, usuario.getNombre());
+        stmtUsuario.setString(5, usuario.getApellido());
+        
+        if (usuario.getTelefono() == null) {
+            stmtUsuario.setNull(6, Types.VARCHAR);
+        } else {
+            stmtUsuario.setString(6, usuario.getTelefono());
+        }
+        
+        if (usuario.getDireccion() == null) {
+            stmtUsuario.setNull(7, Types.VARCHAR);
+        } else {
+            stmtUsuario.setString(7, usuario.getDireccion());
+        }
+        
+        stmtUsuario.setTimestamp(8, new Timestamp(usuario.getFecha_registro().getTime()));
+        stmtUsuario.setInt(9, usuario.getActivo());
+
+        int filas = stmtUsuario.executeUpdate();
+
+        if (filas == 0) {
+            throw new SQLException("La inserción del usuario falló, no se insertaron filas");
+        }
+
+        // Obtener el ID generado
+        generatedKeys = stmtUsuario.getGeneratedKeys();
+        if (!generatedKeys.next()) {
+            throw new SQLException("No se pudo obtener el ID del usuario insertado");
+        }
+        int usuarioId = generatedKeys.getInt(1);
+        usuario.setId(usuarioId);
+
+        // 2. Crear sesión inicial para el usuario
+        String sqlSesion = "INSERT INTO sesiones (usuario_id, dispositivo, fecha_inicio, fecha_ultima_actividad, activa) " +
+                         "VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1)";
+        stmtSesion = conn.prepareStatement(sqlSesion);
+        
+        stmtSesion.setInt(1, usuarioId);
+        stmtSesion.setString(2, "Sistema"); // Dispositivo por defecto
+        
+        stmtSesion.executeUpdate();
+
+        // Confirmar transacción
+        conn.commit();
+        exito = true;
+
+        Notifications.create()
+            .title("Éxito")
+            .text("Usuario registrado y sesión iniciada correctamente")
+            .showInformation();
+
+    } catch (SQLException ex) {
+        System.err.println("Error al insertar usuario: " + ex.getMessage());
+        ex.printStackTrace();
+        
+        // Rollback en caso de error
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                System.err.println("Error al hacer rollback: " + e.getMessage());
+            }
+        }
+        
+        Notifications.create()
+            .title("Error al registrar")
+            .text("Error: " + ex.getMessage())
+            .showError();
+            
+        // Intenta reconectar si hay error de conexión
+        if (ex.getMessage().contains("Connection is closed")) {
+            System.err.println("Intentando reconectar...");
+            ConexionSingleton.reconectar();
+        }
+    } finally {
+        // Restaurar auto-commit y cerrar recursos
+        try {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+            }
+            if (generatedKeys != null) generatedKeys.close();
+            if (stmtUsuario != null) stmtUsuario.close();
+            if (stmtSesion != null) stmtSesion.close();
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar recursos: " + e.getMessage());
+        }
+    }
+    
+    return exito;
+}
 
     public Usuario obtenerPorId(int id) {
         String sql = "SELECT * FROM usuarios WHERE id = ?";
@@ -170,53 +225,88 @@ public class UsuarioDAO {
             return false;
         }
 
-        // Verificar todas las relaciones posibles
+        Connection conn = null;
+        PreparedStatement stmtUsuario = null;
+        PreparedStatement stmtSesiones = null;
+        boolean exito = false;
+
         try {
-            // 1. Verificar si es cliente en ventas (cliente_id)
+            conn = ConexionSingleton.obtenerConexion();
+            if (conn == null || conn.isClosed()) {
+                System.err.println("Conexión cerrada. Reconectando...");
+                conn = ConexionSingleton.obtenerConexion();
+                if (conn == null) {
+                    System.err.println("No se pudo reestablecer la conexión");
+                    return false;
+                }
+            }
+
+            // Iniciar transacción
+            conn.setAutoCommit(false);
+
+            // 1. Verificar relaciones que impiden la eliminación
             if (tieneVentasComoCliente(usuario.getId())) {
                 throw new SQLException("No se puede eliminar: el usuario tiene ventas asociadas como cliente");
             }
 
-            // 2. Verificar si es empleado en ventas (empleado_id)
             if (tieneVentasComoEmpleado(usuario.getId())) {
                 throw new SQLException("No se puede eliminar: el usuario tiene ventas asociadas como empleado");
             }
 
-            // 3. Verificar si generó códigos de barras
             if (tieneRelacionesEnTabla(usuario.getId(), "codigos_barras", "usuario_generador")) {
                 throw new SQLException("No se puede eliminar: el usuario generó códigos de barras");
             }
 
-            // 4. Verificar sesiones activas
-            if (tieneRelacionesEnTabla(usuario.getId(), "sesiones", "usuario_id")) {
-                throw new SQLException("No se puede eliminar: el usuario tiene sesiones activas");
-            }
+            // 2. Eliminar sesiones del usuario
+            String sqlSesiones = "DELETE FROM sesiones WHERE usuario_id = ?";
+            stmtSesiones = conn.prepareStatement(sqlSesiones);
+            stmtSesiones.setInt(1, usuario.getId());
+            stmtSesiones.executeUpdate();
 
-            // Si pasa todas las validaciones, proceder con eliminación
-            String sql = "DELETE FROM usuarios WHERE id = ?";
+            // 3. Eliminar el usuario
+            String sqlUsuario = "DELETE FROM usuarios WHERE id = ?";
+            stmtUsuario = conn.prepareStatement(sqlUsuario);
+            stmtUsuario.setInt(1, usuario.getId());
+            int filasAfectadas = stmtUsuario.executeUpdate();
 
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-                stmt.setInt(1, usuario.getId());
-
-                int filasAfectadas = stmt.executeUpdate();
-
-                if (filasAfectadas > 0) {
-                    Notifications.create()
-                        .title("Éxito")
-                        .text("Usuario eliminado correctamente")
-                        .showInformation();
-                    return true;
-                }
-                return false;
+            if (filasAfectadas > 0) {
+                // Confirmar transacción
+                conn.commit();
+                exito = true;
+                Notifications.create()
+                    .title("Éxito")
+                    .text("Usuario y sus sesiones eliminados correctamente")
+                    .showInformation();
+            } else {
+                conn.rollback();
             }
         } catch (SQLException ex) {
             System.err.println("Error al eliminar usuario: " + ex.getMessage());
+            // Rollback en caso de error
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                    System.err.println("Error al hacer rollback: " + e.getMessage());
+                }
+            }
             Notifications.create()
                 .title("Error al eliminar")
                 .text(ex.getMessage())
                 .showError();
-            return false;
+        } finally {
+            // Restaurar auto-commit y cerrar recursos
+            try {
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                }
+                if (stmtUsuario != null) stmtUsuario.close();
+                if (stmtSesiones != null) stmtSesiones.close();
+            } catch (SQLException e) {
+                System.err.println("Error al cerrar recursos: " + e.getMessage());
+            }
         }
+        return exito;
     }
 
     // Métodos auxiliares específicos para ventas

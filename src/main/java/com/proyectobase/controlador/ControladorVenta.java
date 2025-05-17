@@ -7,6 +7,8 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.proyectobase.modelo.CodigoBarras;
 import com.proyectobase.modelo.ConexionSingleton;
+import com.proyectobase.modelo.DetalleVenta;
+import com.proyectobase.modelo.DetalleVentaDAO;
 import com.proyectobase.modelo.Producto;
 import com.proyectobase.modelo.ProductoDAO;
 import com.proyectobase.modelo.Sesion;
@@ -59,6 +61,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
@@ -106,6 +109,7 @@ public class ControladorVenta implements Initializable {
     private ProductoDAO productoDAO;
     private UsuarioDAO usuarioDAO;
     private VentaDAO ventaDAO;
+    private DetalleVentaDAO detalleVentaDAO;
     ObservableList<Producto> lstProductos = FXCollections.observableArrayList();
     ObservableList<Producto> lstProductosEscaneados = FXCollections.observableArrayList();
     
@@ -115,6 +119,7 @@ public class ControladorVenta implements Initializable {
     ObservableList<Venta> lstVentas = FXCollections.observableArrayList();
     ObservableList<Sesion> lstSesiones = FXCollections.observableArrayList();
     ObservableList<CodigoBarras> lstCodigoBarras = FXCollections.observableArrayList();
+    ObservableList<DetalleVenta> lstDetalleVenta = FXCollections.observableArrayList();
     
     
     
@@ -185,6 +190,9 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     private Button btnCodigoBarras;
+    
+    @FXML
+    private Button btnDetalleProducto;
 
     @FXML
     private ImageView imgBtnProductos;
@@ -197,7 +205,24 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private ImageView imgBtnVentas;
+    
+    @FXML
+    private TableColumn<DetalleVenta, Integer> dvColumnCantidad;
 
+    @FXML
+    private TableColumn<DetalleVenta, Integer> dvColumnId;
+
+    @FXML
+    private TableColumn<DetalleVenta, Double> dvColumnPrecioUnitario;
+
+    @FXML
+    private TableColumn<DetalleVenta, Integer> dvColumnProductoId;
+
+    @FXML
+    private TableColumn<DetalleVenta, Double> dvColumnSubtotal;
+
+    @FXML
+    private TableColumn<DetalleVenta, Integer> dvColumnVentaId;
 
     @FXML
     private TableColumn<Producto, String> pColumnCategoria;
@@ -246,6 +271,9 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private Pane paneVentas;
+    
+    @FXML
+    private Pane paneDetalleVenta;
 
 
     @FXML
@@ -262,6 +290,9 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private TableView<Venta> tablaVentas;
+    
+    @FXML
+    private TableView<DetalleVenta> tablaDetalleVenta;
 
     @FXML
     private VBox vboxEditarItem;
@@ -475,12 +506,21 @@ public class ControladorVenta implements Initializable {
     @FXML
     void eliminarItem(ActionEvent event) {
         switch (identificadorTabla) {
-            //case 1 -> 
+            case 1 -> {
+                productoDAO.eliminarProducto(tablaProductosAdmin.getSelectionModel().getSelectedItem());
+                tablaProductos.getItems().clear();
+                tablaProductos.setItems(obtenerListaProductos());
+                tablaCodigoBarras.getItems().clear();
+                tablaCodigoBarras.setItems(obtenerListaCodigoBarras());
+            
+            }
             //case 2 -> 
             case 3 -> {
                 usuarioDAO.eliminarUsuario(tablaUsuarios.getSelectionModel().getSelectedItem());
                 tablaUsuarios.getItems().clear();
                 tablaUsuarios.setItems(obtenerListaUsuarios());
+                tablaSesiones.getItems().clear();
+                tablaSesiones.setItems(obtenerListaSesiones());
             }
             
             case 4 -> { 
@@ -493,34 +533,33 @@ public class ControladorVenta implements Initializable {
     }
     
     private String generarCorreoUnico(String nombre, String apellido) {
-    // Validación básica
+   
     if ((nombre == null || nombre.trim().isEmpty()) && 
         (apellido == null || apellido.trim().isEmpty())) {
         return "usuario" + System.currentTimeMillis() + "@empresa.com";
     }
 
-    // Normalizar texto (quitar acentos y caracteres especiales)
     String nombreBase = normalizarTexto(nombre != null ? nombre.trim().split(" ")[0] : "");
     String apellidoBase = normalizarTexto(apellido != null ? apellido.trim().split(" ")[0] : "");
 
-    // Construir base del correo
+  
     String correoBase = (nombreBase.isEmpty() ? "user" : nombreBase.toLowerCase()) + 
                        (apellidoBase.isEmpty() ? "" : "." + apellidoBase.toLowerCase());
 
-    // Dominio de la empresa
+
     String dominio = "empresa.com";
 
-    // Generar primera versión del correo
+
     String correoPropuesto = correoBase + "@" + dominio;
     
-    // Verificar si ya existe
+
     if (!existeCorreoEnLista(correoPropuesto)) {
         return correoPropuesto;
     }
 
-    // Si existe, añadir números hasta encontrar uno único
+
     int contador = 1;
-    while (contador < 1000) { // Límite para evitar bucles infinitos
+    while (contador < 1000) {
         String correoConNumero = correoBase + contador + "@" + dominio;
         if (!existeCorreoEnLista(correoConNumero)) {
             return correoConNumero;
@@ -528,7 +567,7 @@ public class ControladorVenta implements Initializable {
         contador++;
     }
 
-    // Si no se encontró uno único con números, usar timestamp
+
     return correoBase + System.currentTimeMillis() + "@" + dominio;
 }
 
@@ -585,6 +624,8 @@ private boolean existeCorreoEnLista(String correo) {
                     System.err.println("Error al insertar el producto: " + e.getMessage());
                     e.printStackTrace();
                 }
+                tablaCodigoBarras.getItems().clear();
+                tablaCodigoBarras.setItems(obtenerListaCodigoBarras());
             }
             
             case 2 -> {
@@ -613,7 +654,9 @@ private boolean existeCorreoEnLista(String correo) {
                     } else {
                         System.out.println("No se pudo insertar el usuario en la base de datos");
                     }
-
+                    tablaSesiones.getItems().clear();
+                    tablaSesiones.setItems(obtenerListaSesiones());
+                    
                 } catch (Exception e) {
                     System.err.println("Error al insertar el usuario: " + e.getMessage());
                     e.printStackTrace();
@@ -626,7 +669,7 @@ private boolean existeCorreoEnLista(String correo) {
                         lstVentas.size()+1,
                             1,
                             1,
-                            new Date(),
+                            LocalDate.now(),
                             "",
                             0.0,
                             "",
@@ -634,12 +677,13 @@ private boolean existeCorreoEnLista(String correo) {
                             ""
                     );
 
-                    boolean exito = ventaDAO.insertarVenta(ventaNueva);
+                    boolean exito = ventaDAO.crearVentaConDetalles(ventaNueva,lstDetalleVenta);
+                    tablaVentas.getItems().clear();
+                    tablaVentas.setItems(obtenerListaVentas());
                     if (exito) {
                         lstVentas.add(ventaNueva); 
-                        System.out.println("Usuario insertado con éxito");
+                        lstDetalleVenta.addAll(listaDetalleProductosParaVenta);
                     } else {
-                        System.out.println("No se pudo insertar el usuario en la base de datos");
                     }
 
                 } catch (Exception e) {
@@ -650,6 +694,18 @@ private boolean existeCorreoEnLista(String correo) {
         }
         
     }
+    ObservableList<DetalleVenta> listaDetalleProductosParaVenta = FXCollections.observableArrayList();
+    
+    @FXML
+    void verPaneDetalleVenta(ActionEvent event) {
+        paneProductos.setVisible(false);
+        paneSesiones.setVisible(false);
+        paneUsuarios.setVisible(false);
+        paneVentas.setVisible(false);
+        paneCodigoBarras.setVisible(false);
+        paneDetalleVenta.setVisible(true);
+    }
+    
     
     private TextField tfpNombre;
     private TextField tfpPrecio;
@@ -665,7 +721,6 @@ private boolean existeCorreoEnLista(String correo) {
     private TextField tfpFechaActualizacion;
     private ImageView imagenActualizar;
     
-
     
     @FXML
     void verPaneProductos(ActionEvent event) {
@@ -677,9 +732,10 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
+        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
 
-        // Inicializamos los TextField
+      
         tfpNombre = new TextField();
         tfpPrecio = new TextField();
         tfpStock = new TextField();
@@ -696,13 +752,11 @@ private boolean existeCorreoEnLista(String correo) {
         tfpPrecioIva.setEditable(false);
         tfpFechaCreacion.setEditable(false);
         tfpFechaActualizacion.setEditable(false);
-        // Configuración del FileChooser (fuera del listener)
         fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif")
         );
 
-        // Creamos las etiquetas y componentes
         Label titulo = new Label("Editar producto:");
         titulo.setStyle("-fx-font-size: 20px;");
         Label labelNombre = new Label("Nombre del producto:");
@@ -716,13 +770,14 @@ private boolean existeCorreoEnLista(String correo) {
         Label labelPrecioIva = new Label("Precio + IVA");
         Label labelFechaCreacion = new Label("Fecha craeción");
         Label labelFechaActualizacion = new Label("Fecha actualización");
+        
 
         imagenActualizar = new ImageView();
         imagenActualizar.setFitWidth(150);
         imagenActualizar.setFitHeight(150);
-        imagenActualizar.setStyle("-fx-cursor: hand;"); // Cambia el cursor al pasar sobre la imagen
+        imagenActualizar.setStyle("-fx-cursor: hand;"); 
 
-        // Evento para abrir el FileChooser al hacer clic en la imagen
+       
         imagenActualizar.setOnMouseClicked(e -> {
             File file = fileChooser.showOpenDialog(paneProductos.getScene().getWindow());
             if (file != null) {
@@ -730,7 +785,7 @@ private boolean existeCorreoEnLista(String correo) {
                 imagenActualizar.setImage(nuevaImagen);
                 imagenSeleccionadaB64 = imagenToBase64(nuevaImagen);
 
-                // Actualiza la imagen en el producto seleccionado (si hay uno)
+               
                 Producto selectedProduct = tablaProductosAdmin.getSelectionModel().getSelectedItem();
                 if (selectedProduct != null) {
                     selectedProduct.setImagenB64(imagenSeleccionadaB64);
@@ -738,7 +793,7 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
 
-        // Añadimos los componentes al VBox
+       
         vboxEditarItem.getChildren().addAll(
              titulo,labelId, tfpid, labelCodigoBarras, tfpcodigoBarras, labelNombre, tfpNombre, labelPrecio,tfpPrecio, labelPrecioIva ,tfpPrecioIva, 
             labelStock, tfpStock, labelDescripcion, tfpDescripcion, 
@@ -751,11 +806,9 @@ private boolean existeCorreoEnLista(String correo) {
         vboxEditarItem.setSpacing(10);
         vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
-        // Listener para actualizar campos al seleccionar un producto (sin FileChooser aquí)
+     
         tablaProductosAdmin.getSelectionModel().selectedItemProperty().addListener((observable, oldProduct, selectedProduct) -> {
             if (selectedProduct != null) {
-                System.out.println("Producto seleccionado: " + selectedProduct.getNombre());
-
                 tfpNombre.setText(selectedProduct.getNombre());
                 tfpPrecio.setText(String.valueOf(selectedProduct.getPrecio()));
                 tfpStock.setText(String.valueOf(selectedProduct.getStock()));
@@ -767,11 +820,11 @@ private boolean existeCorreoEnLista(String correo) {
                 tfpFechaActualizacion.setText(String.valueOf(selectedProduct.getFecha_actualizacion()));
                 tfpFechaCreacion.setText(String.valueOf(selectedProduct.getFecha_creacion()));
 
-                // Cargar imagen actual del producto
+               
                 if (selectedProduct.getImagenB64() != null && !selectedProduct.getImagenB64().isEmpty()) {
                     imagenActualizar.setImage(base64ToImage(selectedProduct.getImagenB64()));
                 } else {
-                    imagenActualizar.setImage(null); // Limpiar si no hay imagen
+                    imagenActualizar.setImage(null); 
                 }
             }
         });
@@ -785,6 +838,7 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
+        paneDetalleVenta.setVisible(false);
         
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
@@ -807,6 +861,7 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(true);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
+        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 3;
@@ -858,6 +913,7 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
     }
+    
     private TextField tfvId;
     private ComboBox<String> cbCliente;
     private ComboBox<String> cbEmpleado;
@@ -867,91 +923,388 @@ private boolean existeCorreoEnLista(String correo) {
     private TextField tfvMetodoPago;
     private TextField tfvTipoVenta;
     private TextField tfvEstado;
+    private Button añadirProducto;
+    private Button eliminarProducto;
+    private ComboBox<Producto> cbProductosDisponibles;
+    private Producto productoSeleccionadoAañadir;
+    private int idVenta;
+    private List<DetalleVenta> listaProductosVentaSeleccionada;
+    private List<Producto> listaProductosDisponibles;
+    ListView<Producto> listViewProductosVenta;
     
-    @FXML
-    void verPaneVentas(ActionEvent event) {
-        paneProductos.setVisible(false);
-        paneSesiones.setVisible(false);
-        paneUsuarios.setVisible(false);
-        paneVentas.setVisible(true);
-        paneCodigoBarras.setVisible(false);
-        
-        vboxEditarItem.getChildren().clear();
-        vboxEditarItem.setVisible(true);
-        identificadorTabla = 4;
-        
-        tfvId = new TextField();
-        cbCliente = new ComboBox();
-        cbEmpleado = new ComboBox();
-        dpFecha = new DatePicker();
-        tfvDescripcion = new TextField();
-        tfvTotal = new TextField();
-        tfvMetodoPago = new TextField();
-        tfvTipoVenta = new TextField();
-        tfvTipoVenta = new TextField();
-        tfvEstado = new TextField();
-        tfvId.setEditable(false);
-        
-        Label titulo = new Label("Editar venta: ");
-        titulo.setStyle("-fx-font-size: 20px;");
-        Label labelId = new Label("ID:");
-        Label labelCliente = new Label ("Cliente:");
-        Label labelEmpleado = new Label ("Empleado");
-        Label labelFecha = new Label ("Fecha:");
-        Label labelDescripcion = new Label("Descripción:");
-        Label labelTotal = new Label("Total:");
-        Label labelMetodoPago = new Label("Método de pago:");
-        Label labelTipoVenta = new Label("Tipo de venta:");
-        Label labelEstado = new Label ("Estado:");
-        
-        vboxEditarItem.getChildren().addAll(titulo, labelId, tfvId, labelCliente, cbCliente,
-                labelEmpleado, cbEmpleado, labelFecha, dpFecha, labelDescripcion, tfvDescripcion,
-                labelTotal, tfvTotal, labelMetodoPago, tfvMetodoPago, labelTipoVenta, tfvTipoVenta,
-                labelEstado, tfvEstado);
-        
-        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+   
 
-        vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
-        vboxEditarItem.setSpacing(10);
-        vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        List<String> listaClientes = new ArrayList();
-        List<String> listaEmpleados = new ArrayList();
-        for(int i = 0; i<lstUsuarios.size(); i++){
-            if(lstUsuarios.get(i).getRol().equals("Cliente") || lstUsuarios.get(i).getRol().equals("cliente")){
-                listaClientes.add(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
-            }else{
-                listaEmpleados.add(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+        @FXML
+        void verPaneVentas(ActionEvent event) {
+           
+            paneProductos.setVisible(false);
+            paneSesiones.setVisible(false);
+            paneUsuarios.setVisible(false);
+            paneVentas.setVisible(true);
+            paneCodigoBarras.setVisible(false);
+            paneDetalleVenta.setVisible(false);
+
+            vboxEditarItem.getChildren().clear();
+            vboxEditarItem.setVisible(true);
+            identificadorTabla = 4;
+
+            inicializarComponentesUI();
+
+            configurarInterfaz();
+
+            cargarDatosIniciales();
+
+            configurarEventos();
+        }
+
+        private void inicializarComponentesUI() {
+            tfvId = new TextField();
+            cbCliente = new ComboBox<>();
+            cbEmpleado = new ComboBox<>();
+            dpFecha = new DatePicker();
+            tfvDescripcion = new TextField();
+            tfvTotal = new TextField();
+            tfvMetodoPago = new TextField();
+            tfvTipoVenta = new TextField();
+            tfvEstado = new TextField();
+            tfvId.setEditable(false);
+            cbProductosDisponibles = new ComboBox<>();
+            listViewProductosVenta = new ListView<>();
+            añadirProducto = new Button("Añadir producto");
+            eliminarProducto = new Button("Eliminar producto");
+
+            listaProductosVentaSeleccionada = new ArrayList<>();
+            listaProductosDisponibles = new ArrayList<>();
+        }
+
+        private void configurarInterfaz() {
+            Label titulo = new Label("Editar venta: ");
+            titulo.setStyle("-fx-font-size: 20px;");
+
+            Label labelId = new Label("ID:");
+            Label labelCliente = new Label("Cliente:");
+            Label labelEmpleado = new Label("Empleado");
+            Label labelFecha = new Label("Fecha:");
+            Label labelDescripcion = new Label("Descripción:");
+            Label labelTotal = new Label("Total:");
+            Label labelMetodoPago = new Label("Método de pago:");
+            Label labelTipoVenta = new Label("Tipo de venta:");
+            Label labelEstado = new Label("Estado:");
+            Label labelInsertarProductoAventa = new Label("Insertar producto a la venta: ");
+            Label labelQuitarProductoVenta = new Label("Eliminar un producto de la venta: ");
+
+            vboxEditarItem.getChildren().addAll(
+                titulo, labelId, tfvId, labelCliente, cbCliente,
+                labelEmpleado, cbEmpleado, labelFecha, dpFecha,
+                labelDescripcion, tfvDescripcion, labelTotal, tfvTotal,
+                labelMetodoPago, tfvMetodoPago, labelTipoVenta, tfvTipoVenta,
+                labelEstado, tfvEstado, labelInsertarProductoAventa,
+                cbProductosDisponibles, añadirProducto, labelQuitarProductoVenta,
+                listViewProductosVenta, eliminarProducto
+            );
+
+            VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+            vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
+            vboxEditarItem.setSpacing(10);
+            vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        }
+
+        private void cargarDatosIniciales() {
+            List<String> listaClientes = new ArrayList<>();
+            List<String> listaEmpleados = new ArrayList<>();
+
+            for(Usuario usuario : lstUsuarios) {
+                if(usuario.getRol().equalsIgnoreCase("cliente")) {
+                    listaClientes.add(usuario.getNombre() + " " + usuario.getApellido());
+                } else {
+                    listaEmpleados.add(usuario.getNombre() + " " + usuario.getApellido());
+                }
+            }
+
+            cbCliente.getItems().addAll(listaClientes);
+            cbEmpleado.getItems().addAll(listaEmpleados);
+
+            actualizarListaProductosDisponibles();
+        }
+
+        private void configurarEventos() {
+            tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
+                if (selectedVenta != null) {
+                    cargarDatosVentaSeleccionada(selectedVenta);
+                }
+            });
+
+            añadirProducto.setOnAction(evento -> {
+                Producto producto = cbProductosDisponibles.getSelectionModel().getSelectedItem();
+
+                if (producto != null) {
+                    agregarProductoAVenta(producto);
+                } else {
+                    mostrarAlerta("Advertencia", "Seleccione un producto para añadir");
+                }
+            });
+
+            eliminarProducto.setOnAction(evento -> {
+                Producto producto = listViewProductosVenta.getSelectionModel().getSelectedItem();
+
+                if (producto != null) {
+                    eliminarProductoDeVenta(producto);
+                } else {
+                    mostrarAlerta("Advertencia", "Seleccione un producto para eliminar");
+                }
+            });
+        }
+
+        private void agregarProductoAVenta(Producto producto) {
+            if (producto.getStock() <= 0) {
+                mostrarAlerta("Error", "No hay stock disponible para este producto");
+                return;
+            }
+
+            Producto productoActualizado = productoDAO.obtenerProductoPorId(producto.getId());
+            if (productoActualizado == null) {
+                mostrarAlerta("Error", "No se pudo obtener la información actualizada del producto");
+                return;
+            }
+
+            if (productoActualizado.getStock() <= 0) {
+                mostrarAlerta("Error", "No hay stock disponible para este producto");
+                return;
+            }
+
+            DetalleVenta detalle = new DetalleVenta(
+                0,
+                idVenta,
+                productoActualizado.getId(),
+                1,
+                productoActualizado.getPrecio_con_iva(),
+                productoActualizado.getPrecio_con_iva()
+            );
+
+            try {
+
+                if (!productoDAO.actualizarProducto(productoActualizado)) {
+                    mostrarAlerta("Error", "No se pudo actualizar el stock del producto");
+                    return;
+                }
+
+                detalleVentaDAO.insertarDetalleVenta(detalle);
+
+                lstDetalleVenta.add(detalle);
+                listaProductosVentaSeleccionada.add(detalle);
+
+                listViewProductosVenta.getItems().add(productoActualizado);
+                actualizarTotalVenta();
+                actualizarListaProductosDisponibles();
+                actualizarTablaVentas();
+
+            } catch (SQLException ex) {
+                System.err.println("Error al agregar producto a venta: " + ex.getMessage());
+                ex.printStackTrace();
+
+                productoActualizado.setStock(productoActualizado.getStock() + 1);
+                productoDAO.actualizarProducto(productoActualizado);
+
+                mostrarAlerta("Error", "No se pudo agregar el producto a la venta: " + ex.getMessage());
             }
         }
-        
-        cbCliente.getItems().addAll(listaClientes);
-        cbEmpleado.getItems().addAll(listaEmpleados);
-        
-        tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
-            if (selectedVenta != null) {
 
-                tfvId.setText(String.valueOf(selectedVenta.getId()));
-                cbCliente.getItems().addAll();
-                for(int i = 0; i<lstUsuarios.size(); i++){
-                    if(lstUsuarios.get(i).getId() == selectedVenta.getCliente_id()){
-                        cbCliente.setValue(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+        private void actualizarProductoEnLista(Producto productoActualizado) {
+            for (int i = 0; i < lstProductos.size(); i++) {
+                if (lstProductos.get(i).getId() == productoActualizado.getId()) {
+                    lstProductos.set(i, productoActualizado);
+                    break;
+                }
+            }
+
+            boolean encontrado = false;
+            for (int i = 0; i < listaProductosDisponibles.size(); i++) {
+                if (listaProductosDisponibles.get(i).getId() == productoActualizado.getId()) {
+                    if (productoActualizado.getStock() > 0) {
+                        listaProductosDisponibles.set(i, productoActualizado);
+                    } else {
+                        listaProductosDisponibles.remove(i);
                     }
-                    
-                    if(lstUsuarios.get(i).getId() == selectedVenta.getEmpleado_id()){
-                        cbEmpleado.setValue(lstUsuarios.get(i).getNombre()+" "+lstUsuarios.get(i).getApellido());
+                    encontrado = true;
+                    break;
+                }
+            }
+
+            if (!encontrado && productoActualizado.getStock() > 0) {
+                listaProductosDisponibles.add(productoActualizado);
+            }
+        }
+
+        private void eliminarProductoDeVenta(Producto producto) {
+            DetalleVenta detalleAEliminar = listaProductosVentaSeleccionada.stream()
+                .filter(d -> d.getProducto_id() == producto.getId())
+                .findFirst()
+                .orElse(null);
+
+            if (detalleAEliminar != null) {
+                try {
+                    Producto productoActual = productoDAO.obtenerProductoPorId(producto.getId());
+                    if (productoActual == null) {
+                        mostrarAlerta("Error", "No se pudo obtener el producto actualizado");
+                        return;
+                    }
+
+                    productoActual.setStock(productoActual.getStock() + detalleAEliminar.getCantidad()-1);
+
+                    if (!productoDAO.actualizarProducto(productoActual)) {
+                        mostrarAlerta("Error", "No se pudo actualizar el stock del producto");
+                        return;
+                    }
+
+                    detalleVentaDAO.eliminarDetalleVenta(detalleAEliminar);
+                    listaProductosVentaSeleccionada.remove(detalleAEliminar);
+                    lstDetalleVenta.remove(detalleAEliminar);
+
+                    listViewProductosVenta.getItems().remove(producto);
+                    actualizarTotalVenta();
+                    actualizarListaProductosDisponibles();
+                    actualizarTablaVentas();
+
+                    actualizarProductoEnLista(productoActual);
+
+                } catch (SQLException ex) {
+                    System.err.println("Error al eliminar producto de venta: " + ex.getMessage());
+                    ex.printStackTrace();
+                    mostrarAlerta("Error", "No se pudo eliminar el producto de la venta: " + ex.getMessage());
+                }
+            }
+        }
+
+        
+
+        private void cargarDatosVentaSeleccionada(Venta venta) {
+            listaProductosVentaSeleccionada.clear();
+            listViewProductosVenta.getItems().clear();
+
+            tfvId.setText(String.valueOf(venta.getId()));
+
+            
+            for (Usuario usuario : lstUsuarios) {
+                if (usuario.getId() == venta.getCliente_id()) {
+                    cbCliente.setValue(usuario.getNombre() + " " + usuario.getApellido());
+                }
+                if (usuario.getId() == venta.getEmpleado_id()) {
+                    cbEmpleado.setValue(usuario.getNombre() + " " + usuario.getApellido());
+                }
+            }
+
+           
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            dpFecha.setValue(LocalDate.parse(venta.getFecha().toString(), formatter));
+
+           
+            tfvDescripcion.setText(venta.getDescripcion());
+            tfvTotal.setText(String.format("%.2f", venta.getTotal()));
+            tfvMetodoPago.setText(venta.getMetodo_pago());
+            tfvTipoVenta.setText(venta.getTipo_venta());
+            tfvEstado.setText(venta.getEstado());
+
+            idVenta = venta.getId();
+
+         
+            for (DetalleVenta dv : lstDetalleVenta) {
+                if (dv.getVenta_id() == venta.getId()) {
+                    listaProductosVentaSeleccionada.add(dv);
+                    for (Producto p : lstProductos) {
+                        if (dv.getProducto_id() == p.getId()) {
+                            listViewProductosVenta.getItems().add(p);
+                            break;
+                        }
                     }
                 }
-                System.out.println(selectedVenta.getFecha().toString());
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                dpFecha.setValue(LocalDate.parse(selectedVenta.getFecha().toString(), formatter));
-                tfvDescripcion.setText(selectedVenta.getDescripcion());
-                tfvTotal.setText(String.valueOf(selectedVenta.getTotal()));
-                tfvMetodoPago.setText(selectedVenta.getMetodo_pago());
-                tfvTipoVenta.setText(String.valueOf(selectedVenta.getTipo_venta()));
-                tfvEstado.setText(selectedVenta.getEstado());
             }
-        });
-    }
+        }
+
+        private void actualizarTotalVenta() {
+            double nuevoTotal = listaProductosVentaSeleccionada.stream()
+                    .mapToDouble(DetalleVenta::getPrecio_unitario)
+                    .sum();
+
+            tfvTotal.setText(String.format("%.2f", nuevoTotal));
+
+       
+            Venta ventaActualizada = new Venta(
+                idVenta,
+                obtenerIdCliente(cbCliente.getValue()),
+                obtenerIdEmpleado(cbEmpleado.getValue()),
+                dpFecha.getValue(),
+                tfvDescripcion.getText(),
+                nuevoTotal,
+                tfvMetodoPago.getText(),
+                tfvTipoVenta.getText(),
+                tfvEstado.getText()
+            );
+            ventaDAO.actualizarVenta(ventaActualizada);
+        }
+
+        private void actualizarListaProductosDisponibles() {
+            listaProductosDisponibles.clear();
+            cbProductosDisponibles.getItems().clear();
+
+            for (Producto producto : lstProductos) {
+                if (producto.getStock() > 0) {
+                    listaProductosDisponibles.add(producto);
+                }
+            }
+
+            cbProductosDisponibles.getItems().addAll(listaProductosDisponibles);
+        }
+
+        private void actualizarTablaVentas() {
+            tablaVentas.getItems().clear();
+            tablaVentas.setItems(obtenerListaVentas());
+        }
+
+        private void mostrarAlerta(String titulo, String mensaje) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle(titulo);
+            alert.setHeaderText(null);
+            alert.setContentText(mensaje);
+            alert.showAndWait();
+        }
+
+        
+    
+
+       private int obtenerIdCliente(String nombreCompleto) {
+           if (nombreCompleto == null || nombreCompleto.isEmpty()) {
+               return -1;
+           }
+
+           for (Usuario usuario : lstUsuarios) {
+               if ((usuario.getRol().equalsIgnoreCase("cliente")) && 
+                   (usuario.getNombre() + " " + usuario.getApellido()).equals(nombreCompleto)) {
+                   return usuario.getId();
+               }
+           }
+
+           System.err.println("Cliente no encontrado: " + nombreCompleto);
+           return -1; 
+       }
+
+    
+       private int obtenerIdEmpleado(String nombreCompleto) {
+           if (nombreCompleto == null || nombreCompleto.isEmpty()) {
+               return -1;
+           }
+
+           for (Usuario usuario : lstUsuarios) {
+               if ((!usuario.getRol().equalsIgnoreCase("cliente")) && 
+                   (usuario.getNombre() + " " + usuario.getApellido()).equals(nombreCompleto)) {
+                   return usuario.getId();
+               }
+           }
+
+           System.err.println("Empleado no encontrado: " + nombreCompleto);
+           return -1;
+       }
+    
+   
     
     private TextField tfcCodigo;
     private TextField tfcProductoAsignado;
@@ -964,49 +1317,48 @@ private boolean existeCorreoEnLista(String correo) {
     
     
     @FXML
-private void descargarImagen() {
-    if (imagenCB == null) {
-        return;
-    }
+    private void descargarImagen() {
+        if (imagenCB == null) {
+            return;
+        }
 
-    FileChooser fileChooser = new FileChooser();
-    fileChooser.setTitle("Guardar código de barras");
-    fileChooser.setInitialFileName("codigo_barras.png");
-    fileChooser.getExtensionFilters().addAll(
-        new FileChooser.ExtensionFilter("Imagen PNG", "*.png"),
-        new FileChooser.ExtensionFilter("Imagen JPEG", "*.jpg", "*.jpeg")
-    );
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar código de barras");
+        fileChooser.setInitialFileName("codigo_barras.png");
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Imagen PNG", "*.png"),
+            new FileChooser.ExtensionFilter("Imagen JPEG", "*.jpg", "*.jpeg")
+        );
 
-    File archivo = fileChooser.showSaveDialog(btnDescargar.getScene().getWindow());
-    
-    if (archivo != null) {
-        try {
-            // Asegurar la extensión correcta
-            String nombreArchivo = archivo.getName().toLowerCase();
-            String formato;
-            
-            if (nombreArchivo.endsWith(".jpg") || nombreArchivo.endsWith(".jpeg")) {
-                formato = "jpg";
-            } else {
-                // Por defecto usamos PNG
-                if (!nombreArchivo.endsWith(".png")) {
-                    archivo = new File(archivo.getAbsolutePath() + ".png");
+        File archivo = fileChooser.showSaveDialog(btnDescargar.getScene().getWindow());
+
+        if (archivo != null) {
+            try {
+                // Asegurar la extensión correcta
+                String nombreArchivo = archivo.getName().toLowerCase();
+                String formato;
+
+                if (nombreArchivo.endsWith(".jpg") || nombreArchivo.endsWith(".jpeg")) {
+                    formato = "jpg";
+                } else {
+                    // Por defecto usamos PNG
+                    if (!nombreArchivo.endsWith(".png")) {
+                        archivo = new File(archivo.getAbsolutePath() + ".png");
+                    }
+                    formato = "png";
                 }
-                formato = "png";
+
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(imagenCB.getImage(), null);
+
+
+                boolean exito = ImageIO.write(bufferedImage, formato, archivo);
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(imagenCB.getImage(), null);
-            
-
-            // Guardar la imagen
-            boolean exito = ImageIO.write(bufferedImage, formato, archivo);
-            
-           
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
-}
     
     @FXML
     void verPaneCodigoBarras(ActionEvent event) {
@@ -1015,7 +1367,7 @@ private void descargarImagen() {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(true);
-        
+        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 5;
@@ -1083,11 +1435,9 @@ private void descargarImagen() {
     
         public Image generarImagenCodigoBarras(String data) {
         try {
-            // Crear la matriz de bits del código de barras
             BitMatrix bitMatrix = new MultiFormatWriter()
                     .encode(data, BarcodeFormat.CODE_128, 300, 150);
 
-            // Crear imagen escribible con las dimensiones del código de barras
             WritableImage writableImage = new WritableImage(
                 bitMatrix.getWidth(), 
                 bitMatrix.getHeight()
@@ -1095,7 +1445,6 @@ private void descargarImagen() {
 
             PixelWriter pixelWriter = writableImage.getPixelWriter();
 
-            // Rellenar la imagen con píxeles blancos y negros según la matriz
             for (int y = 0; y < bitMatrix.getHeight(); y++) {
                 for (int x = 0; x < bitMatrix.getWidth(); x++) {
                     Color color = bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE;
@@ -1206,31 +1555,37 @@ private void descargarImagen() {
         return null;
     }
     
-    private ObservableList obtenerListaVentas() {
+    private ObservableList<Venta> obtenerListaVentas() {
         if (conexion != null) {
             String query = "SELECT * FROM ventas";
             try {
                 rs = st.executeQuery(query);
-                Venta ven;
+                lstVentas.clear(); 
+
                 while (rs.next()) { 
-                    ven = new Venta(
-                            rs.getInt("id"), 
-                            rs.getInt("cliente_id"),
-                            rs.getInt("empleado_id"),
-                            rs.getDate("fecha"), 
-                            rs.getString("descripcion"),
-                            rs.getDouble("total"),
-                            rs.getString("metodo_pago"),
-                            rs.getString("tipo_venta"),
-                            rs.getString("estado"));
+                    java.sql.Date fechaSql = rs.getDate("fecha");
+                    LocalDate fecha = (fechaSql != null) ? fechaSql.toLocalDate() : null;
+
+                    Venta ven = new Venta(
+                        rs.getInt("id"), 
+                        rs.getInt("cliente_id"),
+                        rs.getInt("empleado_id"),
+                        fecha, 
+                        rs.getString("descripcion"),
+                        rs.getDouble("total"),
+                        rs.getString("metodo_pago"),
+                        rs.getString("tipo_venta"),
+                        rs.getString("estado"));
+
                     lstVentas.add(ven);
                 }
             } catch (SQLException e) {
                 System.out.println("Excepción SQL: "+e.getMessage());
+                e.printStackTrace();
             }
             return lstVentas;
         }
-        return null;
+        return FXCollections.observableArrayList(); 
     }
     
     private ObservableList obtenerListaSesiones() {
@@ -1278,6 +1633,31 @@ private void descargarImagen() {
         }
         return null;
     }
+    
+    private ObservableList obtenerListaDetalleVenta() {
+        if (conexion != null) {
+            String query = "SELECT * FROM detalle_venta";
+            try {
+                rs = st.executeQuery(query);
+                DetalleVenta dv;
+                while (rs.next()) { 
+                    dv = new DetalleVenta(
+                            rs.getInt("id"),
+                            rs.getInt("venta_id"),
+                            rs.getInt("producto_id"),
+                            rs.getInt("cantidad"),
+                            rs.getDouble("precio_unitario"),
+                            rs.getDouble("subtotal"));
+                    lstDetalleVenta.add(dv);
+                }
+            } catch (SQLException e) {
+                System.out.println("Excepción SQL: "+e.getMessage());
+            }
+            return lstDetalleVenta;
+        }
+        return null;
+    }
+    
     
     
     public void inicializarTablasProductos() {
@@ -1377,7 +1757,7 @@ private void descargarImagen() {
             tablaVentas.setItems(lstVentas);
 
         } catch (Exception ex) {
-            System.out.println("Error en inicializarTablaUsuarios: " + ex.getMessage());
+            System.out.println("Error en inicializarTablaVentas: " + ex.getMessage());
         }
     }
     
@@ -1393,7 +1773,7 @@ private void descargarImagen() {
             tablaSesiones.setItems(lstSesiones);
 
         } catch (Exception ex) {
-            System.out.println("Error en inicializarTablaUsuarios: " + ex.getMessage());
+            System.out.println("Error en inicializarTablaSesiones: " + ex.getMessage());
         }
     }
     
@@ -1407,7 +1787,24 @@ private void descargarImagen() {
             tablaCodigoBarras.setItems(lstCodigoBarras);
 
         } catch (Exception ex) {
-            System.out.println("Error en inicializarTablaUsuarios: " + ex.getMessage());
+            System.out.println("Error en inicializarTablaCodigoBarras: " + ex.getMessage());
+        }
+    }
+    
+    public void inicializarTablaDetalleVenta() {
+        try {
+            dvColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
+            dvColumnVentaId.setCellValueFactory(new PropertyValueFactory<>("venta_id"));
+            dvColumnProductoId.setCellValueFactory(new PropertyValueFactory<>("producto_id"));
+            dvColumnCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
+            dvColumnPrecioUnitario.setCellValueFactory(new PropertyValueFactory<>("precio_unitario"));
+            dvColumnSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
+            
+            
+            tablaDetalleVenta.setItems(lstDetalleVenta);
+
+        } catch (Exception ex) {
+            System.out.println("Error en inicializarTablaDetalleVenta: " + ex.getMessage());
         }
     }
     
@@ -1438,15 +1835,19 @@ private void descargarImagen() {
     double totalCompra = 0;
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
+        
+        
+        
         vboxEditarItem.setVisible(false);
-        btnDescargar = new Button("Descargar");
-        btnDescargar.setOnAction(event -> descargarImagen());
+        
         
         try {
             conexion = ConexionSingleton.obtenerConexion();
             this.productoDAO = new ProductoDAO(conexion);
             this.usuarioDAO = new UsuarioDAO(conexion);
             this.ventaDAO = new VentaDAO(conexion);
+            this.detalleVentaDAO = new DetalleVentaDAO(conexion);
             if (conexion != null) {
                 this.st = conexion.createStatement();
             }
@@ -1456,17 +1857,24 @@ private void descargarImagen() {
             System.out.println("No se ha conectado a la base de datos");
         }
         
+        btnDescargar = new Button("Descargar");
+        
+        btnDescargar.setOnAction(event -> descargarImagen());
+        
+        
         obtenerListaProductos();
         obtenerListaUsuarios();
         obtenerListaVentas();
         obtenerListaSesiones();
         obtenerListaCodigoBarras();
+        obtenerListaDetalleVenta();
         inicializarTablasProductos();
         inicializarTablaUsuarios();
         inicializarTablaVentas();
         inicializarTablaSesiones();
         inicializarTablasProductosAdmin();
         inicializarTablaCodigosBarras();
+        inicializarTablaDetalleVenta();
         
         Image imagen;
         /*try {
@@ -1506,5 +1914,6 @@ private void descargarImagen() {
             }
         });*/
         System.out.println(codigoProducto);
+        
     }
 }

@@ -20,6 +20,7 @@ public class Producto {
     private final StringProperty categoria;
     private final ObjectProperty<Date> fecha_creacion;
     private final ObjectProperty<Date> fecha_actualizacion;
+
     
 
     public Producto(int id, String codigo_barras, String nombre, double precio, double precio_con_iva, int stock,
@@ -81,5 +82,11 @@ public class Producto {
 
     public Date getFecha_actualizacion() { return fecha_actualizacion.get(); }
     public void setFecha_actualizacion(Date fecha_actualizacion) { this.fecha_actualizacion.set(fecha_actualizacion); }
-    public ObjectProperty<Date> fecha_actualizacionProperty() { return fecha_actualizacion; }
+    public ObjectProperty<Date> fecha_actualizacionProperty() { return fecha_actualizacion;}
+    
+    @Override
+    public String toString() {
+        return nombre.get();
+    }
 }
+   
