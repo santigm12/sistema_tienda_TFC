@@ -21,7 +21,7 @@ public class VentaDAO {
 
     // Método para insertar una nueva venta
     public boolean crearVentaConDetalles(Venta venta, List<DetalleVenta> detalles) {
-        if (venta == null || detalles == null || detalles.isEmpty()) {
+        if (venta == null || detalles == null) {
             System.err.println("Error: Venta o detalles no válidos");
             Notifications.create()
                 .title("Error")
@@ -78,41 +78,7 @@ public class VentaDAO {
             int ventaId = generatedKeys.getInt(1);
             venta.setId(ventaId);
 
-            // 2. Insertar los detalles de venta
-            /*String sqlDetalle = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal) " +
-                              "VALUES (?, ?, ?, ?, ?)";
-            stmtDetalle = conn.prepareStatement(sqlDetalle);
-
-            // Validar y procesar cada detalle
-            for (DetalleVenta detalle : detalles) {
-                // Verificar stock disponible
-                if (!verificarStockDisponible(conn, detalle.getProducto_id(), detalle.getCantidad())) {
-                    throw new SQLException("Stock insuficiente para el producto ID: " + detalle.getProducto_id());
-                }
-
-                stmtDetalle.setInt(1, ventaId);
-                stmtDetalle.setInt(2, detalle.getProducto_id());
-                stmtDetalle.setInt(3, detalle.getCantidad());
-                stmtDetalle.setDouble(4, detalle.getPrecio_unitario());
-                stmtDetalle.setDouble(5, detalle.getSubtotal());
-
-                stmtDetalle.addBatch(); // Agregar a batch para ejecución masiva
-
-                // Actualizar stock del producto
-                actualizarStockProducto(conn, detalle.getProducto_id(), -detalle.getCantidad());
-            }
-
-            // Ejecutar todos los detalles en lote
-            int[] resultados = stmtDetalle.executeBatch();
-            for (int resultado : resultados) {
-                if (resultado == PreparedStatement.EXECUTE_FAILED) {
-                    throw new SQLException("Error al insertar uno o más detalles de venta");
-                }
-            }
-
-            // Confirmar transacción
-            conn.commit();
-            exito = true;*/
+            
 
             Notifications.create()
                 .title("Éxito")

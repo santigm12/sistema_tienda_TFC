@@ -12,6 +12,7 @@ import com.proyectobase.modelo.DetalleVentaDAO;
 import com.proyectobase.modelo.Producto;
 import com.proyectobase.modelo.ProductoDAO;
 import com.proyectobase.modelo.Sesion;
+import com.proyectobase.modelo.SessionManager;
 import com.proyectobase.modelo.Usuario;
 import com.proyectobase.modelo.UsuarioDAO;
 import com.proyectobase.modelo.Venta;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.function.Function;
@@ -49,6 +51,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -57,6 +60,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -161,11 +165,7 @@ public class ControladorVenta implements Initializable {
     @FXML
     private ImageView imagenCodigo;
 
-    @FXML
-    void finalizarCompra(ActionEvent event) {
-        
-        
-    }
+    
     
     @FXML
     private Button btnActualizar;
@@ -193,6 +193,9 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     private Button btnDetalleProducto;
+    
+    @FXML
+    private Button btnQuitarProducto;
 
     @FXML
     private ImageView imgBtnProductos;
@@ -272,8 +275,6 @@ public class ControladorVenta implements Initializable {
     @FXML
     private Pane paneVentas;
     
-    @FXML
-    private Pane paneDetalleVenta;
 
 
     @FXML
@@ -381,6 +382,66 @@ public class ControladorVenta implements Initializable {
     @FXML
     private TableColumn<Sesion, Integer> sColumnUsuario;
     int identificadorTabla = 0;
+    
+    @FXML
+    void quitarProductoListaVenta(ActionEvent event) {
+        for(int i = 0; i<lstProductosEscaneados.size(); i++){
+            if(lstProductosEscaneados.get(i).getId() == tablaProductos.getSelectionModel().getSelectedItem().getId()){
+                lstProductosEscaneados.remove(i);
+                break;
+            }
+        }
+        actualizarLabelTotalVenta();
+    }
+    
+    public double actualizarLabelTotalVenta(){
+        double total = 0;
+        
+        
+        for(int i = 0; i<lstProductosEscaneados.size(); i++){
+            total+=lstProductosEscaneados.get(i).getPrecio_con_iva();
+        }
+        lblPrecio.setText(total+"€");
+        return total;
+    }
+    
+    @FXML
+    void finalizarCompra(ActionEvent event) {
+        try{
+            Venta venta = new Venta(
+                    0,
+                    1,
+                    1,
+                    LocalDate.now(),
+                    "Venta regular",
+                    actualizarLabelTotalVenta(),
+                    "EFECTIVO",
+                    "CONTADO",
+                    "COMPLETADA"
+
+            );
+            ventaDAO.crearVentaConDetalles(venta, new ArrayList());
+            List<Venta> listaVentas = obtenerListaVentas();
+            int idVentaAñadirDetalles = 0;
+            for (int i = 0; i <listaVentas.size() ; i++) {
+                if(idVenta < listaVentas.get(i).getId()){
+                    idVentaAñadirDetalles = listaVentas.get(i).getId();
+                }
+            }
+
+            for (int i = 0; i <lstProductosEscaneados.size() ; i++) {
+                DetalleVenta dv = new DetalleVenta(0, idVentaAñadirDetalles, lstProductosEscaneados.get(i).getId(), 1, lstProductosEscaneados.get(i).getPrecio_con_iva(), lstProductosEscaneados.get(i).getPrecio_con_iva());
+                detalleVentaDAO.insertarDetalleVenta(dv);
+            }
+            tablaProductos.getItems().clear();
+            actualizarLabelTotalVenta();
+            
+        }catch (Exception ex) {
+            System.out.println(ex);
+        }
+        
+        
+    }
 
     @FXML
     void actualizarItem(ActionEvent event) {
@@ -692,20 +753,9 @@ private boolean existeCorreoEnLista(String correo) {
                 }
             }
         }
-        
     }
     ObservableList<DetalleVenta> listaDetalleProductosParaVenta = FXCollections.observableArrayList();
-    
-    @FXML
-    void verPaneDetalleVenta(ActionEvent event) {
-        paneProductos.setVisible(false);
-        paneSesiones.setVisible(false);
-        paneUsuarios.setVisible(false);
-        paneVentas.setVisible(false);
-        paneCodigoBarras.setVisible(false);
-        paneDetalleVenta.setVisible(true);
-    }
-    
+        
     
     private TextField tfpNombre;
     private TextField tfpPrecio;
@@ -732,7 +782,6 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
-        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
 
       
@@ -838,13 +887,12 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
-        paneDetalleVenta.setVisible(false);
         
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 2;
-        
     }
+    
     private TextField tfuId;
     private TextField tfuCorreo;
     private TextField tfuPermisos;
@@ -861,7 +909,6 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(true);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(false);
-        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 3;
@@ -942,7 +989,6 @@ private boolean existeCorreoEnLista(String correo) {
             paneUsuarios.setVisible(false);
             paneVentas.setVisible(true);
             paneCodigoBarras.setVisible(false);
-            paneDetalleVenta.setVisible(false);
 
             vboxEditarItem.getChildren().clear();
             vboxEditarItem.setVisible(true);
@@ -1367,7 +1413,6 @@ private boolean existeCorreoEnLista(String correo) {
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(true);
-        paneDetalleVenta.setVisible(false);
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 5;
@@ -1662,32 +1707,62 @@ private boolean existeCorreoEnLista(String correo) {
     
     public void inicializarTablasProductos() {
         try {
+            // Configurar columnas con PropertyValueFactory
             tc_id.setCellValueFactory(new PropertyValueFactory<>("id"));
             tc_nombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
             tc_precio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+
+            // Configurar columna de precio con IVA (alternativa si no existe la propiedad)
             tc_precioIVA.setCellValueFactory(new PropertyValueFactory<>("precio_con_iva"));
+
+            // Configurar columna de imagen con renderizado personalizado
             tc_imagen.setCellValueFactory(cellData -> {
-                String base64 = cellData.getValue().getImagenB64();
+                Producto producto = cellData.getValue();
                 ImageView imageView = new ImageView();
 
-                if (base64 != null && !base64.isBlank()) {
-                    Image image = base64ToImage(base64);
-                    if (image != null) {
-                        imageView.setImage(image);
+                try {
+                    String base64 = producto.getImagenB64();
+                    if (base64 != null && !base64.isEmpty()) {
+                        Image image = base64ToImage(base64);
+                        if (image != null) {
+                            imageView.setImage(image);
+                            imageView.setFitHeight(60);
+                            imageView.setFitWidth(60);
+                            imageView.setPreserveRatio(true);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error al cargar imagen: " + e.getMessage());
+                }
+
+                return new SimpleObjectProperty<>(imageView);
+            });
+
+            // Configurar la fábrica de celdas para la columna de imagen
+            tc_imagen.setCellFactory(column -> new TableCell<Producto, ImageView>() {
+                private final ImageView imageView = new ImageView();
+
+                @Override
+                protected void updateItem(ImageView item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null || item.getImage() == null) {
+                        setGraphic(null);
+                    } else {
+                        imageView.setImage(item.getImage());
                         imageView.setFitHeight(60);
                         imageView.setFitWidth(60);
                         imageView.setPreserveRatio(true);
-                        System.out.println("entra en el inicializar");
-                    } else {
-                        System.out.println("Error al convertir la imagen del producto ID: " + cellData.getValue().getId());
+                        setGraphic(imageView);
                     }
                 }
-                return new SimpleObjectProperty<>(imageView);
             });
+
+            // Asignar los datos a la tabla
             tablaProductos.setItems(lstProductosEscaneados);
 
         } catch (Exception ex) {
             System.out.println("Error en inicializarTablasProductos: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
     
@@ -1791,51 +1866,55 @@ private boolean existeCorreoEnLista(String correo) {
         }
     }
     
-    public void inicializarTablaDetalleVenta() {
-        try {
-            dvColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
-            dvColumnVentaId.setCellValueFactory(new PropertyValueFactory<>("venta_id"));
-            dvColumnProductoId.setCellValueFactory(new PropertyValueFactory<>("producto_id"));
-            dvColumnCantidad.setCellValueFactory(new PropertyValueFactory<>("cantidad"));
-            dvColumnPrecioUnitario.setCellValueFactory(new PropertyValueFactory<>("precio_unitario"));
-            dvColumnSubtotal.setCellValueFactory(new PropertyValueFactory<>("subtotal"));
-            
-            
-            tablaDetalleVenta.setItems(lstDetalleVenta);
-
-        } catch (Exception ex) {
-            System.out.println("Error en inicializarTablaDetalleVenta: " + ex.getMessage());
-        }
-    }
+    
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private void abrirVentanaImagen(String imagenB64) {
-    try {
-        Stage ventana = new Stage();
-        ventana.setTitle("Imagen Ampliada");
-        
-        ImageView imageViewAmpliada = new ImageView();
-        imageViewAmpliada.setPreserveRatio(true);
-        imageViewAmpliada.setFitWidth(600);
-        
-        byte[] imageData = Base64.getDecoder().decode(imagenB64);
-        Image image = new Image(new ByteArrayInputStream(imageData));
-        imageViewAmpliada.setImage(image);
-        
-        StackPane root = new StackPane(imageViewAmpliada);
-        Scene scene = new Scene(root);
-        
-        ventana.setScene(scene);
-        ventana.show();
-    } catch (Exception e) {
-        System.err.println("Error al mostrar imagen: " + e.getMessage());
+        try {
+            Stage ventana = new Stage();
+            ventana.setTitle("Imagen Ampliada");
+
+            ImageView imageViewAmpliada = new ImageView();
+            imageViewAmpliada.setPreserveRatio(true);
+            imageViewAmpliada.setFitWidth(600);
+
+            byte[] imageData = Base64.getDecoder().decode(imagenB64);
+            Image image = new Image(new ByteArrayInputStream(imageData));
+            imageViewAmpliada.setImage(image);
+
+            StackPane root = new StackPane(imageViewAmpliada);
+            Scene scene = new Scene(root);
+
+            ventana.setScene(scene);
+            ventana.show();
+        } catch (Exception e) {
+            System.err.println("Error al mostrar imagen: " + e.getMessage());
+        }
     }
-}
     
+    private Usuario usuarioLogueado;
     double totalCompra = 0;
+
+    // Método para establecer el usuario
+    public void setUsuarioLogueado(Usuario usuario) {
+        this.usuarioLogueado = usuario;
+        configurarPermisos(); // Configurar permisos cuando se recibe el usuario
+    }
+
+    private void configurarPermisos() {
+        if (usuarioLogueado != null && usuarioLogueado.getRol() != null) {
+            tabAdmin.setDisable(!usuarioLogueado.getRol().equals("administrador"));
+        } else {
+            System.err.println("Usuario no disponible para configurar permisos");
+            // Opcional: cerrar la ventana o mostrar mensaje de error
+        }
+    }
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
+        this.usuarioLogueado = SessionManager.getInstance().getUsuarioLogueado();
+        if(!usuarioLogueado.getRol().equals("administrador")){
+            tabAdmin.setDisable(true);
+        }
         
         
         
@@ -1874,46 +1953,140 @@ private boolean existeCorreoEnLista(String correo) {
         inicializarTablaSesiones();
         inicializarTablasProductosAdmin();
         inicializarTablaCodigosBarras();
-        inicializarTablaDetalleVenta();
-        
-        Image imagen;
-        /*try {
-            imagen = new Image(new FileInputStream("C:/Users/santi/Desktop/imagen.png"));
-            System.out.println(imagenToBase64(imagen));
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(ControladorVenta.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
         
         
-        
-        Platform.runLater(() -> campoCodigoOculto.requestFocus());
-        //System.out.println(lstProductos.size());
-        
-        campoCodigoOculto.setOnAction(event -> {
-            String codigo = campoCodigoOculto.getText();
-            for(int i = 0; i<lstProductos.size(); i++){
-                if(lstProductos.get(i).getCodigo_barras().equals(codigo)){
-                    lstProductosEscaneados.add(lstProductos.get(i));
-                    tablaProductos.setItems(lstProductosEscaneados);
-                    totalCompra+=lstProductos.get(i).getPrecio();
-                    lblPrecio.setText(""+totalCompra);
-                    System.out.println("producto encontrado");
-                    break;
+        configurarComponentesVenta();
+    
+        System.out.println(codigoProducto);
+    }
+
+    private void configurarComponentesVenta() {
+        // Inicializar la lista de productos escaneados si es null
+        if (lstProductosEscaneados == null) {
+            lstProductosEscaneados = FXCollections.observableArrayList();
+        }
+
+        // Configurar la tabla de productos
+        //configurarTablaProductosVenta();
+
+        // Configurar el campo de código oculto para el escáner
+        configurarCampoCodigoBarras();
+
+        // Configurar el label de precio
+        lblPrecio.setText("0.00");
+
+        // Opcional: Configurar imagen por defecto para el código de barras
+        try {
+            Image imagenCodigoBarras = new Image(getClass().getResourceAsStream("/images/barcode.png"));
+            imagenCodigo.setImage(imagenCodigoBarras);
+        } catch (Exception e) {
+            System.out.println("No se pudo cargar la imagen por defecto del código de barras");
+        }
+    }
+
+    private void configurarTablaProductosVenta() {
+        // Configurar las columnas de la tabla
+        tc_imagen.setCellValueFactory(new PropertyValueFactory<>("imagenB64"));
+        tc_id.setCellValueFactory(new PropertyValueFactory<>("id"));
+        tc_nombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        tc_precio.setCellValueFactory(new PropertyValueFactory<>("precio"));
+        tc_precioIVA.setCellValueFactory(new PropertyValueFactory<>("precio_con_iva"));
+
+        // Configurar celda personalizada para la imagen
+        tc_imagen.setCellFactory(column -> new TableCell<Producto, ImageView>() {
+                private final ImageView imageView = new ImageView();
+
+                @Override
+                protected void updateItem(ImageView item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null || item.getImage() == null) {
+                        setGraphic(null);
+                    } else {
+                        imageView.setImage(item.getImage());
+                        imageView.setFitHeight(60);
+                        imageView.setFitWidth(60);
+                        imageView.setPreserveRatio(true);
+                        setGraphic(imageView);
+                    }
+                }
+            });
+
+        // Configurar formato de precios
+        tc_precio.setCellFactory(column -> new TableCell<Producto, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("€%.2f", item));
+                    setAlignment(Pos.CENTER);
                 }
             }
-            System.out.println("Código de barras escaneado: " + codigo);
-
-            campoCodigoOculto.clear(); // Limpiar para el próximo escaneo
         });
-        /*Platform.runLater(() -> {
-            Scene scene = vboxPrecio.getScene(); 
-            if (scene != null) {
-                scene.setOnKeyPressed(event -> {
-                    codigoProducto.concat(event.getText());
-                });
+
+        tc_precioIVA.setCellFactory(column -> new TableCell<Producto, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("€%.2f", item * 1.21)); // IVA del 21%
+                    setAlignment(Pos.CENTER);
+                }
             }
-        });*/
-        System.out.println(codigoProducto);
-        
+        });
+    }
+
+    private void configurarCampoCodigoBarras() {
+        campoCodigoOculto.setFocusTraversable(false);
+
+        // Manejar el evento de entrada del escáner
+        campoCodigoOculto.setOnAction(event -> {
+            String codigo = campoCodigoOculto.getText().trim();
+
+            if (!codigo.isEmpty()) {
+                // Buscar el producto usando Stream (más eficiente)
+                Optional<Producto> productoEncontrado = lstProductos.stream()
+                    .filter(p -> p.getCodigo_barras().equals(codigo))
+                    .findFirst();
+
+                if (productoEncontrado.isPresent()) {
+                    Producto producto = productoEncontrado.get();
+                    lstProductosEscaneados.add(producto);
+                    totalCompra += producto.getPrecio_con_iva();
+                    lblPrecio.setText(totalCompra+"€");
+
+                    // Mostrar imagen del producto si está disponible
+                    /*if (producto.getImagen() != null) {
+                        imagenCodigo.setImage(producto.getImagen());
+                    }*/
+                } else {
+                    mostrarAlertaProductoNoEncontrado(codigo);
+                }
+            }
+
+            campoCodigoOculto.clear();
+            Platform.runLater(() -> campoCodigoOculto.requestFocus());
+        });
+
+        // Mantener siempre el foco en el campo
+        campoCodigoOculto.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                Platform.runLater(() -> campoCodigoOculto.requestFocus());
+            }
+        });
+
+        // Establecer foco inicial
+        Platform.runLater(() -> campoCodigoOculto.requestFocus());
+    }
+
+    private void mostrarAlertaProductoNoEncontrado(String codigo) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Producto no encontrado");
+        alert.setHeaderText(null);
+        alert.setContentText("El código de barras " + codigo + " no corresponde a ningún producto");
+        alert.showAndWait();
     }
 }

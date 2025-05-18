@@ -29,6 +29,11 @@
                   </padding>
                   <children>
                     <TextField fx:id="campoCodigoOculto" focusTraversable="false" opacity="0.0" />
+                              <Label text="Total:">
+                                 <font>
+                                    <Font size="30.0" />
+                                 </font>
+                              </Label>
                     <Label fx:id="lblPrecio" prefHeight="60.0" prefWidth="190.0" text="0.0">
                       <font>
                         <Font size="36.0" />
@@ -53,7 +58,7 @@
                     </TableView>
                     <HBox alignment="CENTER_RIGHT" spacing="20.0">
                       <children>
-                        <Button mnemonicParsing="false" text="Quitar producto" />
+                        <Button fx:id="btnQuitarProducto" mnemonicParsing="false" onAction="#quitarProductoListaVenta" text="Quitar producto" />
                         <Button fx:id="btnFinalizarCompra" mnemonicParsing="false" onAction="#finalizarCompra" text="Finalizar compra" />
                       </children>
                       <padding>
@@ -81,25 +86,20 @@
                   </padding>
                   <children>
                     <Button fx:id="btnProductos" contentDisplay="CENTER" onAction="#verPaneProductos" text="Productos">
-                      <graphic><ImageView fx:id="imgBtnProductos" fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
+                      <graphic><ImageView fx:id="imgBtnProductos" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
                     </Button>
                     <Button fx:id="btnSesiones" contentDisplay="CENTER" onAction="#verPaneSesion" text="Sesiones">
-                      <graphic><ImageView fx:id="imgBtnSesiones" fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
+                      <graphic><ImageView fx:id="imgBtnSesiones" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
                     </Button>
                     <Button fx:id="btnUsuarios" contentDisplay="CENTER" onAction="#verPaneUsuarios" text="Usuarios">
-                      <graphic><ImageView fx:id="imgBtnUsuarios" fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
+                      <graphic><ImageView fx:id="imgBtnUsuarios" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
                     </Button>
                     <Button fx:id="btnVentas" contentDisplay="CENTER" onAction="#verPaneVentas" text="Ventas">
-                      <graphic><ImageView fx:id="imgBtnVentas" fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
+                      <graphic><ImageView fx:id="imgBtnVentas" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
                     </Button>
                     <Button fx:id="btnCodigoBarras" contentDisplay="CENTER" onAction="#verPaneCodigoBarras" text="Códigos de barras">
                       <graphic><ImageView fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
                     </Button>
-                              <Button fx:id="btnDetalleVenta" contentDisplay="CENTER" onAction="#verPaneDetalleVenta" text="Detalle venta">
-                                 <graphic>
-                                    <ImageView fitHeight="125.0" fitWidth="200.0" preserveRatio="true" />
-                                 </graphic>
-                              </Button>
                     
                   </children>
                 </VBox>
@@ -205,23 +205,6 @@
                             </TableView>
                           </children>
                         </AnchorPane>
-                                    <AnchorPane fx:id="paneDetalleVenta">
-                                       <children>
-                                          <TableView fx:id="tablaDetalleVenta" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                                             <columnResizePolicy>
-                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                                             </columnResizePolicy>
-                                             <columns>
-                                                <TableColumn fx:id="dvColumnId" text="ID" />
-                                                <TableColumn fx:id="dvColumnVentaId" text="Venta ID" />
-                                                <TableColumn fx:id="dvColumnProductoId" text="Producto ID" />
-                                                <TableColumn fx:id="dvColumnCantidad" text="Cantidad" />
-                                                <TableColumn fx:id="dvColumnPrecioUnitario" prefWidth="75.0" text="Precio unitario" />
-                                                <TableColumn fx:id="dvColumnSubtotal" prefWidth="75.0" text="Subtotal" />
-                                             </columns>
-                                          </TableView>
-                                       </children>
-                                    </AnchorPane>
                       </children>
                     </StackPane>
 

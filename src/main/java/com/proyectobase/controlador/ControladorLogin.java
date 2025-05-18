@@ -2,6 +2,7 @@ package com.proyectobase.controlador;
 
 import com.proyectobase.modelo.ConexionSingleton;
 import com.proyectobase.modelo.Seguridad;
+import com.proyectobase.modelo.SessionManager;
 import com.proyectobase.modelo.Usuario;
 import java.io.IOException;
 import java.net.URL;
@@ -49,22 +50,23 @@ public class ControladorLogin implements Initializable {
     private TextField txtUsuario;
 
     @FXML
-    void iniciarSesion(ActionEvent event) {
+        void iniciarSesion(ActionEvent event) {
         String correo = txtUsuario.getText().trim();
         String password = txtContrasena.getText().trim();
-        
-        /*if (!obtenerUsuario(correo)) {
+
+        if (!obtenerUsuario(correo)) {
             System.out.println("Usuario no encontrado");
             return;
-        }else{
-            System.out.println("usuario encontrado y se llama: "+usuarioLogin.getNombre());
-            System.out.println(""+BCrypt.checkpw(password, usuarioLogin.getPassword_hash()));
-            abrirVentanaVenta();
-        }*/
-        
-        abrirVentanaVenta();
+        }
 
-        
+        if (!BCrypt.checkpw(password, usuarioLogin.getPassword_hash())) {
+            System.out.println("Contraseña incorrecta");
+            return;
+        }
+
+        // Solo llamar una vez a abrirVentanaVenta()
+        SessionManager.getInstance().setUsuarioLogueado(usuarioLogin);
+        abrirVentanaVenta();
     }
 
     private ObservableList obtenerListaUsuarios() {
@@ -135,29 +137,34 @@ public class ControladorLogin implements Initializable {
     
     
     public void abrirVentanaVenta() {
-    try {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/proyectobase/vista/ventanaVenta.fxml"));
-        Parent root = loader.load();
-        
-        Stage stageActual = (Stage) btnIniciarSesion.getScene().getWindow();
-        stageActual.close();
-        
-        Stage stage = new Stage();
-        stage.setTitle("Venta");
-        stage.setScene(new Scene(root));
-        stage.setMaximized(true);
-        stage.setResizable(true);
-        stage.show();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/proyectobase/vista/ventanaVenta.fxml"));
+            Parent root = loader.load();
 
-    } catch (IOException e) {
-        System.err.println("Error al cargar el archivo FXML: " + e.getMessage());
-        e.printStackTrace();
+            // Obtener el controlador y configurar el usuario
+            ControladorVenta controladorVenta = loader.getController();
+            controladorVenta.setUsuarioLogueado(SessionManager.getInstance().getUsuarioLogueado());
+
+            Stage stageActual = (Stage) btnIniciarSesion.getScene().getWindow();
+            stageActual.close();
+
+            Stage stage = new Stage();
+            stage.setTitle("Venta");
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
+
+        } catch (IOException e) {
+            System.err.println("Error al cargar el archivo FXML: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-}
-    
-    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        
+        
+        
+        
         try {
             conexion = ConexionSingleton.obtenerConexion();
             if (conexion != null) {
