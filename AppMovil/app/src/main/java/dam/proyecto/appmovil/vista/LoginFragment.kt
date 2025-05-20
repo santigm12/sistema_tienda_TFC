@@ -8,10 +8,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dam.proyecto.appmovil.R
 import dam.proyecto.appmovil.databinding.FragmentLoginBinding
+import dam.proyecto.appmovil.modelo.UsuarioLogin
+import dam.proyecto.appmovil.viewModel.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,6 +30,9 @@ import org.mindrot.jbcrypt.BCrypt
 
 class LoginFragment : Fragment() {
     private lateinit var binding:FragmentLoginBinding
+    private val usuarioViewModel: UserViewModel by activityViewModels()
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -56,21 +63,30 @@ class LoginFragment : Fragment() {
             Log.d("LoginDebug", "Password enviada: ${binding.txtPassword.text}")
 
             lifecycleScope.launch {
-                val exito = login(email, password)
-                if (exito) {
+                val usuario = login(email, password)
+                if (usuario != null) {
+                    usuarioViewModel.setUsuario(usuario)
                     val navigationController = findNavController()
-                    val accion = LoginFragmentDirections.actionLoginFragmentToHomeFragment()
+                    val accion = LoginFragmentDirections
+                        .actionLoginFragmentToHomeFragment(
+                            idUsuarioLogin = usuario.id,
+                            correoUsuarioLogin = usuario.correo,
+                            rolUsuarioLogin = usuario.rol,
+                            nombreUsuarioLogin = usuario.nombre,
+                            apellidoUsuarioLogin = usuario.apellido
+                        )
                     navigationController.navigate(accion)
                 } else {
                     Toast.makeText(requireContext(), "El usuario o la contraseña son incorrectos", Toast.LENGTH_SHORT).show()
                 }
             }
+
         }
 
 
     }
 
-    suspend fun login(correo: String, password: String): Boolean {
+    suspend fun login(correo: String, password: String): UsuarioLogin? {
         return withContext(Dispatchers.IO) {
             try {
                 val cliente = OkHttpClient()
@@ -89,11 +105,22 @@ class LoginFragment : Fragment() {
 
                 Log.d("Login", "Respuesta: $respuestaTexto")
 
-                respuestaTexto?.contains("exito", ignoreCase = true) == true
+                val jsonResponse = JSONObject(respuestaTexto ?: "")
+                if (jsonResponse.getBoolean("autenticado")) {
+                    val usuario = jsonResponse.getJSONObject("usuario")
+                    UsuarioLogin(
+                        id = usuario.getInt("id"),
+                        correo = usuario.getString("correo"),
+                        rol = usuario.getString("rol"),
+                        nombre = usuario.getString("nombre"),
+                        apellido = usuario.getString("apellido")
+                    )
+                } else null
             } catch (e: Exception) {
                 Log.e("Login", "Error en login: ${e.message}")
-                false
+                null
             }
         }
     }
+
 }

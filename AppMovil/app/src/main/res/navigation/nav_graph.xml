@@ -32,7 +32,23 @@
         android:id="@+id/homeFragment"
         android:name="dam.proyecto.appmovil.vista.HomeFragment"
         android:label="Inicio"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <argument
+            android:name="idUsuarioLogin"
+            app:argType="integer" />
+        <argument
+            android:name="correoUsuarioLogin"
+            app:argType="string" />
+        <argument
+            android:name="rolUsuarioLogin"
+            app:argType="string" />
+        <argument
+            android:name="nombreUsuarioLogin"
+            app:argType="string" />
+        <argument
+            android:name="apellidoUsuarioLogin"
+            app:argType="string" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"
@@ -50,6 +66,19 @@
         android:id="@+id/pedidosFragment"
         android:name="dam.proyecto.appmovil.vista.PedidosFragment"
         android:label="Configuración"
-        tools:layout="@layout/fragment_pedidos" />
+        tools:layout="@layout/fragment_pedidos" >
+        <argument android:name="idUsuarioLogin"
+            app:argType="integer" />
+        <argument
+            android:name="correoUsuarioLogin"
+            app:argType="string" />
+        <argument android:name="rolUsuarioLogin"
+            app:argType="string" />
+        <argument android:name="nombreUsuarioLogin"
+            app:argType="string" />
+        <argument
+            android:name="apellidoUsuarioLogin"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

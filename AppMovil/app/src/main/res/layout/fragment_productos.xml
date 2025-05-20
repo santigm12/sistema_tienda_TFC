@@ -7,10 +7,11 @@
     tools:context=".vista.ProductosFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id = "@+id/lstProductos"
+        android:id="@+id/lstProductos"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        android:background="#E6C0C0"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
 
 
