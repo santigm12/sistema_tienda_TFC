@@ -113,7 +113,10 @@ class LoginFragment : Fragment() {
                         correo = usuario.getString("correo"),
                         rol = usuario.getString("rol"),
                         nombre = usuario.getString("nombre"),
-                        apellido = usuario.getString("apellido")
+                        apellido = usuario.getString("apellido"),
+                        telefono = usuario.getString("telefono"),
+                        direccion = usuario.getString("direccion"),
+                        password = usuario.getString("password_hash")
                     )
                 } else null
             } catch (e: Exception) {

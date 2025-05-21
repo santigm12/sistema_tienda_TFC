@@ -36,8 +36,6 @@ class PedidosFragment : Fragment() {
 
         adapter = PedidoAdapter(emptyList(), emptyList(), emptyList());
 
-
-
         setupRecyclerView()
 
         usuarioViewModel.usuario.observe(viewLifecycleOwner, Observer { usuario ->

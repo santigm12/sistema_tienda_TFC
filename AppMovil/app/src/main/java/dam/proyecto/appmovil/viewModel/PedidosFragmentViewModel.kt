@@ -76,7 +76,10 @@ class PedidosFragmentViewModel : ViewModel() {
                 val respuesta = ventaApi.obtenerVentasPorCliente(clienteId)
                 _ventas.postValue(respuesta)
 
-                // Si hay ventas, cargar sus detalles
+                // Reiniciar los detalles antes de volver a agregarlos
+                _detallesVenta.postValue(emptyList())
+
+                // Cargar detalles por cada venta
                 respuesta.forEach { venta ->
                     cargarDetallesVenta(venta.id)
                 }
@@ -87,18 +90,24 @@ class PedidosFragmentViewModel : ViewModel() {
     }
 
 
+
+
+
     private suspend fun cargarDetallesVenta(ventaId: Int) {
         try {
             val respuesta = detalleVentaApi.obtenerDetallesPorVenta(ventaId)
 
-
-            val detallesActuales = _detallesVenta.value ?: emptyList()
-            _detallesVenta.postValue(detallesActuales + respuesta)
+            // Enviar la lista combinada al hilo principal
+            withContext(Dispatchers.Main) {
+                val detallesActuales = _detallesVenta.value ?: emptyList()
+                _detallesVenta.value = detallesActuales + respuesta
+            }
 
         } catch (e: Exception) {
-            manejarError("Error al cargar detalles de venta", e)
+            Log.d("Cargar detalles venta: ","Error al cargar detalles de venta", e)
         }
     }
+
 
 
     private fun manejarError(mensaje: String, e: Exception) {

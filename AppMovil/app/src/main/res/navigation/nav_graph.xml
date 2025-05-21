@@ -65,7 +65,7 @@
     <fragment
         android:id="@+id/pedidosFragment"
         android:name="dam.proyecto.appmovil.vista.PedidosFragment"
-        android:label="Configuración"
+        android:label="Pedidos"
         tools:layout="@layout/fragment_pedidos" >
         <argument android:name="idUsuarioLogin"
             app:argType="integer" />
