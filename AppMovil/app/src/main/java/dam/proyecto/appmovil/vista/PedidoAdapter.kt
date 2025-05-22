@@ -9,20 +9,27 @@ import dam.proyecto.appmovil.modelo.Producto
 import dam.proyecto.appmovil.modelo.Venta
 
 class PedidoAdapter(
-    private var listaVentas: List<Venta>,
-    private var listaDetalles: List<DetalleVenta>,
-    private var listaProductos: List<Producto>
+    private var listaVentas: MutableList<Venta>,
+    private var listaDetalles: MutableList<DetalleVenta>,
+    private var listaProductos: MutableList<Producto>,
+    private val clienteId: Int
 ) : RecyclerView.Adapter<PedidoHolder>() {
 
 
     fun actualizarDatos(
-        nuevasVentas: List<Venta>,
-        nuevosDetalles: List<DetalleVenta>,
-        nuevosProductos: List<Producto>
+        nuevasVentas: MutableList<Venta>,
+        nuevosDetalles: MutableList<DetalleVenta>,
+        nuevosProductos: MutableList<Producto>
     ) {
-        listaVentas = nuevasVentas
-        listaDetalles = nuevosDetalles
-        listaProductos = nuevosProductos
+        listaVentas.clear()
+        listaVentas.addAll(nuevasVentas)
+
+        listaDetalles.clear()
+        listaDetalles.addAll(nuevosDetalles)
+
+        listaProductos.clear()
+        listaProductos.addAll(nuevosProductos)
+
         notifyDataSetChanged()
     }
 
@@ -32,7 +39,7 @@ class PedidoAdapter(
             parent,
             false
         )
-        return PedidoHolder(binding)
+        return PedidoHolder(binding, clienteId, this)
     }
 
     override fun onBindViewHolder(holder: PedidoHolder, position: Int) {
@@ -45,4 +52,16 @@ class PedidoAdapter(
     }
 
     override fun getItemCount(): Int = listaVentas.size
+
+    fun eliminarVenta(ventaId: Int) {
+        val ventaIndex = listaVentas.indexOfFirst { it.id == ventaId }
+        if (ventaIndex != -1) {
+            listaVentas.removeAt(ventaIndex)
+
+            listaDetalles.removeAll { it.venta_id == ventaId }
+
+            notifyItemRemoved(ventaIndex)
+            notifyItemRangeChanged(ventaIndex, itemCount)
+        }
+    }
 }

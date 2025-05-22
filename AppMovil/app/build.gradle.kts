@@ -1,8 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.kapt") //para que se pueda generar código automáticamente
-    id("androidx.navigation.safeargs.kotlin") //para la navegación
+    id("org.jetbrains.kotlin.kapt")
+    id ("kotlin-parcelize")
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {

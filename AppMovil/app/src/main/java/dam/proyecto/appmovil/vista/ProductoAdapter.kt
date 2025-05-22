@@ -8,7 +8,7 @@ import dam.proyecto.appmovil.modelo.Producto
 
 class ProductoAdapter (
     var productos:List<Producto>,
-    val lambda: (ProductoHolder) -> Unit
+    val lambda: (Producto) -> Unit
 ):RecyclerView.Adapter<ProductoHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductoHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -19,10 +19,10 @@ class ProductoAdapter (
     override fun getItemCount(): Int = productos.size
 
     override fun onBindViewHolder(holder: ProductoHolder, position: Int) {
-        val producto = productos.get(position)
+        val producto = productos[position]
         holder.mostrarProducto(producto)
-        holder.binding.root.setOnClickListener{
-            lambda(holder)
+        holder.binding.root.setOnClickListener {
+            lambda(producto)
         }
     }
 

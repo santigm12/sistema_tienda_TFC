@@ -19,21 +19,21 @@ class ProductosFragmentViewModel : ViewModel() {
     private val _productos = MutableLiveData<List<Producto>>()
     val productos: LiveData<List<Producto>> get() = _productos
 
-    // Define la API
+
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2/sistema-tienda-api/api/") // <-- debe terminar en /
+        .baseUrl("http://10.0.2.2/sistema-tienda-api/api/")
         .addConverterFactory(MoshiConverterFactory.create())
         .build()
 
     interface ProductoApi {
-        @GET("productos/leer.php") // <-- ahora sí
+        @GET("productos/leer.php")
         suspend fun obtenerProductos(): List<Producto>
     }
 
 
     private val productoApi = retrofit.create(ProductoApi::class.java)
 
-    // Cargar productos desde API
+
     fun cargarProductos() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -45,7 +45,7 @@ class ProductosFragmentViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Manejar error de red u otros
+
                 withContext(Dispatchers.Main) {
                     Log.d("Error", "Error al cargar los productos")
                 }

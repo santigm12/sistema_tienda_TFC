@@ -1,6 +1,7 @@
 package dam.proyecto.appmovil.vista
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dam.proyecto.appmovil.databinding.FragmentPedidosBinding
 import dam.proyecto.appmovil.viewModel.PedidosFragmentViewModel
@@ -33,66 +35,69 @@ class PedidosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-        adapter = PedidoAdapter(emptyList(), emptyList(), emptyList());
-
         setupRecyclerView()
 
-        usuarioViewModel.usuario.observe(viewLifecycleOwner, Observer { usuario ->
-            usuario?.let {
+        usuarioViewModel.usuario.observe(viewLifecycleOwner) { usuario ->
+            if (usuario != null) {
+                Log.d("FRAGMENT_DEBUG", "Usuario obtenido: ${usuario.id}")
+                adapter = PedidoAdapter(mutableListOf(), mutableListOf(), mutableListOf(), usuario.id)
+                binding.lstPedidos.adapter = adapter
+                pedidosViewModel.cargarDatosCompletos(usuario.id)
                 setupObservers()
-                pedidosViewModel.cargarDatosCompletos(it.id)
-            } ?: run {
-                Toast.makeText(
-                    requireContext(),
-                    "No se encontró información del usuario",
-                    Toast.LENGTH_SHORT
-                ).show()
             }
-        })
+        }
     }
 
     private fun setupRecyclerView() {
         binding.lstPedidos.apply {
             layoutManager = LinearLayoutManager(requireContext())
             setHasFixedSize(true)
-            adapter = this@PedidosFragment.adapter
+            addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
         }
     }
 
     private fun setupObservers() {
-        pedidosViewModel.ventas.observe(viewLifecycleOwner, Observer { ventas ->
-            ventas?.let { updateAdapterData() }
-        })
+        pedidosViewModel.ventas.observe(viewLifecycleOwner) { ventas ->
+            ventas?.let {
+                adapter.actualizarDatos(
+                    ventas.toMutableList(),
+                    pedidosViewModel.detallesVenta.value?.toMutableList() ?: mutableListOf(),
+                    pedidosViewModel.productos.value?.toMutableList() ?: mutableListOf()
+                )
+                updateEmptyState()
+            }
+        }
 
-        pedidosViewModel.productos.observe(viewLifecycleOwner, Observer { productos ->
-            productos?.let { updateAdapterData() }
-        })
+        pedidosViewModel.productos.observe(viewLifecycleOwner) { productos ->
+            productos?.let {
+                adapter.actualizarDatos(
+                    pedidosViewModel.ventas.value?.toMutableList() ?: mutableListOf(),
+                    pedidosViewModel.detallesVenta.value?.toMutableList() ?: mutableListOf(),
+                    productos.toMutableList()
+                )
+            }
+        }
 
-        pedidosViewModel.detallesVenta.observe(viewLifecycleOwner, Observer { detalles ->
-            detalles?.let { updateAdapterData() }
-        })
+        pedidosViewModel.detallesVenta.observe(viewLifecycleOwner) { detalles ->
+            detalles?.let {
+                adapter.actualizarDatos(
+                    pedidosViewModel.ventas.value?.toMutableList() ?: mutableListOf(),
+                    detalles.toMutableList(),
+                    pedidosViewModel.productos.value?.toMutableList() ?: mutableListOf()
+                )
+            }
+        }
 
-        pedidosViewModel.error.observe(viewLifecycleOwner, Observer { errorMessage ->
+        pedidosViewModel.error.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.takeIf { it.isNotEmpty() }?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
-        })
+        }
     }
 
-    private fun updateAdapterData() {
-        val ventas = pedidosViewModel.ventas.value ?: emptyList()
-        val productos = pedidosViewModel.productos.value ?: emptyList()
-        val detalles = pedidosViewModel.detallesVenta.value ?: emptyList()
-
-        if (ventas.isNotEmpty()) {
-            adapter.actualizarDatos(ventas, detalles, productos)
-        } else {
-            Toast.makeText(
-                requireContext(),
-                "No hay pedidos registrados",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+    private fun updateEmptyState() {
+        val isEmpty = adapter.itemCount == 0
+        binding.lstPedidos.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        // Aquí puedes agregar la visibilidad de una vista de "lista vacía" si lo deseas
     }
 }

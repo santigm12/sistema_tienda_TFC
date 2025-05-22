@@ -60,7 +60,14 @@
         android:id="@+id/productosFragment"
         android:name="dam.proyecto.appmovil.vista.ProductosFragment"
         android:label="Productos"
-        tools:layout="@layout/fragment_productos" />
+        tools:layout="@layout/fragment_productos" >
+        <action
+            android:id="@+id/action_productosFragment_to_carritoFragment"
+            app:destination="@id/carritoFragment" />
+        <action
+            android:id="@+id/action_productosFragment_to_detalleProductoFragment"
+            app:destination="@id/detalleProductoFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/pedidosFragment"
@@ -80,5 +87,18 @@
             android:name="apellidoUsuarioLogin"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/carritoFragment"
+        android:name="dam.proyecto.appmovil.vista.CarritoFragment"
+        android:label="CarritoFragment" />
+    <fragment
+        android:id="@+id/detalleProductoFragment"
+        android:name="dam.proyecto.appmovil.vista.DetalleProductoFragment"
+        android:label="DetalleProductoFragment" >
+        <argument
+            android:name="producto"
+            app:argType="dam.proyecto.appmovil.modelo.Producto"/>
+    </fragment>
+
 
 </navigation>
