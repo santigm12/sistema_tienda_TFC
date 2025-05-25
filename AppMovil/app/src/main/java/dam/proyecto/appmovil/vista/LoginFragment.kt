@@ -96,7 +96,7 @@ class LoginFragment : Fragment() {
                 }
                 val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
                 val request = Request.Builder()
-                    .url("http://10.0.2.2/sistema-tienda-api/api/usuarios/autenticar.php")
+                    .url("http://52.206.9.18/sistema-tienda-api/api/usuarios/autenticar.php")
                     .post(body)
                     .build()
 

@@ -21,7 +21,7 @@ class ProductosFragmentViewModel : ViewModel() {
 
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2/sistema-tienda-api/api/")
+        .baseUrl("http://52.206.9.18/sistema-tienda-api/api/")
         .addConverterFactory(MoshiConverterFactory.create())
         .build()
 

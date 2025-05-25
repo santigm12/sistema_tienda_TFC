@@ -78,6 +78,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.image.Image;
@@ -447,23 +448,40 @@ public class ControladorVenta implements Initializable {
     void actualizarItem(ActionEvent event) {
         switch(identificadorTabla){
             case 1 -> {
-                String query = "UPDATE productos SET nombre=?, precio=?, stock=?, descripcion=?, imagenB64=?, categoria=? WHERE id=?";
-                        try {
-                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
-                            preparedStatement.setString(1, tfpNombre.getText());
-                            preparedStatement.setDouble(2, Double.parseDouble(tfpPrecio.getText()));
-                            preparedStatement.setInt(3, Integer.parseInt(tfpStock.getText()));
-                            preparedStatement.setString(4, tfpDescripcion.getText());
-                            preparedStatement.setString(5, imagenToBase64(imagenActualizar.getImage()));
-                            preparedStatement.setString(6, tfpCategoria.getText());
-                            preparedStatement.setInt(7, Integer.parseInt(tfpid.getText()));
-                            preparedStatement.executeUpdate();
-                        } catch (SQLException ex) {
-                            System.out.println("Excepción: "+ex.getMessage());
-                        }catch (IllegalArgumentException e){
-                            System.out.println("El número introducido no es correcto");
-                        }
-                        tablaProductosAdmin.setItems(obtenerListaProductos());
+                if (!validarTodosLosCamposProducto()) {
+                    mostrarAlerta("Campos inválidos", "Por favor corrige los campos marcados antes de actualizar.");
+                    return;
+                }
+                
+                String query = "UPDATE productos SET nombre=?, precio=?, precio_con_iva=?, stock=?, descripcion=?, imagenB64=?, categoria=? WHERE id=?";
+                try {
+                    PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
+                    preparedStatement.setString(1, tfpNombre.getText());
+                    preparedStatement.setDouble(2, Double.parseDouble(tfpPrecio.getText()));
+                    preparedStatement.setDouble(3, Double.parseDouble(tfpPrecioIva.getText()));
+                    preparedStatement.setInt(4, Integer.parseInt(tfpStock.getText()));
+                    preparedStatement.setString(5, tfpDescripcion.getText());
+
+                    Image imagen = imagenActualizar.getImage();
+                    if (imagen != null) {
+                        preparedStatement.setString(6, imagenToBase64(imagen));
+                    } else {
+                        preparedStatement.setNull(6, java.sql.Types.VARCHAR); // o usar preparedStatement.setString(5, ""); si prefieres cadena vacía
+                    }
+
+                    preparedStatement.setString(7, tfpCategoria.getText());
+                    preparedStatement.setInt(8, Integer.parseInt(tfpid.getText()));
+
+                    preparedStatement.executeUpdate();
+                } catch (SQLException ex) {
+                    System.out.println("Excepción: " + ex.getMessage());
+                    mostrarAlerta("Error al actualizar el producto", "Alguno de los campos son incorrectos");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("El número introducido no es correcto");
+                    mostrarAlerta("Error al actualizar el producto", "Alguno de los campos son incorrectos");
+                }
+
+                tablaProductosAdmin.setItems(obtenerListaProductos());
             }
             
             case 2 -> {
@@ -471,11 +489,16 @@ public class ControladorVenta implements Initializable {
             }
             
             case 3 -> {
+                
+                if (!validarTodosLosCamposUsuario()) {
+                    mostrarAlerta("Campos inválidos", "Por favor corrige los campos marcados antes de actualizar.");
+                    return;
+                }
                 String query = "UPDATE usuarios SET correo=?, rol=?, nombre=?, apellido=?, telefono=?, direccion=? WHERE id=?";
                         try {
                             PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
                             preparedStatement.setString(1, tfuCorreo.getText());
-                            preparedStatement.setString(2, tfuPermisos.getText());
+                            preparedStatement.setString(2, tfuPermisos.getValue());
                             preparedStatement.setString(3, tfuNombre.getText());
                             preparedStatement.setString(4, tfuApellidos.getText());
                             preparedStatement.setString(5, tfuTelefono.getText());
@@ -491,6 +514,10 @@ public class ControladorVenta implements Initializable {
             }
             
             case 4 -> {
+                if (!validarTodosLosCamposVenta()) {
+                    mostrarAlerta("Campos inválidos", "Por favor corrige los campos marcados antes de actualizar.");
+                    return;
+                }
                 String query = "UPDATE ventas SET cliente_id=?, empleado_id=?, fecha=?, descripcion=?, total=?, metodo_pago=?, tipo_venta=?, estado=? WHERE id=?";
                 int idCliente = 0;
                 int idEmpleado = 0;
@@ -770,7 +797,95 @@ private boolean existeCorreoEnLista(String correo) {
     private TextField tfpFechaCreacion;
     private TextField tfpFechaActualizacion;
     private ImageView imagenActualizar;
+    Tooltip tooltipNombre = new Tooltip("El nombre no puede estar vacío.");
+    Tooltip tooltipPrecio = new Tooltip("Introduce un precio válido (ej: 10.99).");
+    Tooltip tooltipStock = new Tooltip("El stock debe ser un número entero.");
+    Tooltip tooltipCategoria = new Tooltip("La categoría no puede estar vacía.");
+    Tooltip tooltipDescripcion = new Tooltip("La descripción no puede estar vacía.");
     
+    private boolean validarCampoNombre() {
+        if (tfpNombre.getText().trim().isEmpty()) {
+            tfpNombre.setStyle("-fx-border-color: red;");
+            tfpNombre.setTooltip(tooltipNombre);
+            return false;
+        } else {
+            tfpNombre.setStyle(null);
+            tfpNombre.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoPrecio() {
+        if (!tfpPrecio.getText().matches("\\d+(\\.\\d{1,2})?")) {
+            tfpPrecio.setStyle("-fx-border-color: red;");
+            tfpPrecio.setTooltip(tooltipPrecio);
+            return false;
+        } else {
+            tfpPrecio.setStyle(null);
+            tfpPrecio.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoStock() {
+        if (!tfpStock.getText().matches("\\d+")) {
+            tfpStock.setStyle("-fx-border-color: red;");
+            tfpStock.setTooltip(tooltipStock);
+            return false;
+        } else {
+            tfpStock.setStyle(null);
+            tfpStock.setTooltip(null);
+            return true;
+        }
+    }
+    
+    private boolean validarCampoDescripcion() {
+        if (tfpDescripcion.getText().trim().isEmpty()) {
+            tfpDescripcion.setStyle("-fx-border-color: red;");
+            tfpDescripcion.setTooltip(tooltipDescripcion);
+            return false;
+        } else {
+            tfpDescripcion.setStyle(null);
+            tfpDescripcion.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoCategoria() {
+        if (tfpCategoria.getText().trim().isEmpty()) {
+            tfpCategoria.setStyle("-fx-border-color: red;");
+            tfpCategoria.setTooltip(tooltipCategoria);
+            return false;
+        } else {
+            tfpCategoria.setStyle(null);
+            tfpCategoria.setTooltip(null);
+            return true;
+        }
+    }
+    
+    private void calcularPrecioConIva() {
+        try {
+            double precio = Double.parseDouble(tfpPrecio.getText().trim());
+            double precioConIva = precio * 1.21;
+            tfpPrecioIva.setText(""+precioConIva);
+        } catch (NumberFormatException e) {
+            tfpPrecioIva.setText("");
+        }
+    }
+    
+    private boolean validarTodosLosCamposProducto() {
+        /*System.out.println("Nombre: "+validarCampoNombre());
+        System.out.println("Precio: "+validarCampoPrecio());
+        System.out.println("Stock: "+validarCampoStock());
+        System.out.println("Descripcion: "+validarCampoDescripcion());
+        System.out.println("Categoria: "+validarCampoCategoria());*/
+        return validarCampoNombre() &&
+           validarCampoPrecio() &&
+           validarCampoStock() &&
+           validarCampoDescripcion() &&
+           validarCampoCategoria();
+    
+}
     
     @FXML
     void verPaneProductos(ActionEvent event) {
@@ -784,7 +899,6 @@ private boolean existeCorreoEnLista(String correo) {
         paneCodigoBarras.setVisible(false);
         vboxEditarItem.getChildren().clear();
 
-      
         tfpNombre = new TextField();
         tfpPrecio = new TextField();
         tfpStock = new TextField();
@@ -795,12 +909,13 @@ private boolean existeCorreoEnLista(String correo) {
         tfpPrecioIva = new TextField();
         tfpFechaCreacion = new TextField();
         tfpFechaActualizacion = new TextField();
-        
+
         tfpid.setEditable(false);
         tfpcodigoBarras.setEditable(false);
         tfpPrecioIva.setEditable(false);
         tfpFechaCreacion.setEditable(false);
         tfpFechaActualizacion.setEditable(false);
+
         fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif")
@@ -817,16 +932,14 @@ private boolean existeCorreoEnLista(String correo) {
         Label labelId = new Label("ID");
         Label labelCodigoBarras = new Label("Código de barras");
         Label labelPrecioIva = new Label("Precio + IVA");
-        Label labelFechaCreacion = new Label("Fecha craeción");
+        Label labelFechaCreacion = new Label("Fecha creación");
         Label labelFechaActualizacion = new Label("Fecha actualización");
-        
 
         imagenActualizar = new ImageView();
         imagenActualizar.setFitWidth(150);
         imagenActualizar.setFitHeight(150);
-        imagenActualizar.setStyle("-fx-cursor: hand;"); 
+        imagenActualizar.setStyle("-fx-cursor: hand;");
 
-       
         imagenActualizar.setOnMouseClicked(e -> {
             File file = fileChooser.showOpenDialog(paneProductos.getScene().getWindow());
             if (file != null) {
@@ -834,7 +947,6 @@ private boolean existeCorreoEnLista(String correo) {
                 imagenActualizar.setImage(nuevaImagen);
                 imagenSeleccionadaB64 = imagenToBase64(nuevaImagen);
 
-               
                 Producto selectedProduct = tablaProductosAdmin.getSelectionModel().getSelectedItem();
                 if (selectedProduct != null) {
                     selectedProduct.setImagenB64(imagenSeleccionadaB64);
@@ -842,20 +954,19 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
 
-       
         vboxEditarItem.getChildren().addAll(
-             titulo,labelId, tfpid, labelCodigoBarras, tfpcodigoBarras, labelNombre, tfpNombre, labelPrecio,tfpPrecio, labelPrecioIva ,tfpPrecioIva, 
-            labelStock, tfpStock, labelDescripcion, tfpDescripcion, 
-            labelImagen, imagenActualizar, labelCategoria, tfpCategoria,  
-            labelFechaCreacion , tfpFechaCreacion, labelFechaActualizacion , tfpFechaActualizacion
+            titulo, labelId, tfpid, labelCodigoBarras, tfpcodigoBarras, labelNombre, tfpNombre,
+            labelPrecio, tfpPrecio, labelPrecioIva, tfpPrecioIva,
+            labelStock, tfpStock, labelDescripcion, tfpDescripcion,
+            labelImagen, imagenActualizar, labelCategoria, tfpCategoria,
+            labelFechaCreacion, tfpFechaCreacion, labelFechaActualizacion, tfpFechaActualizacion
         );
-        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
 
+        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
         vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
         vboxEditarItem.setSpacing(10);
         vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
-     
         tablaProductosAdmin.getSelectionModel().selectedItemProperty().addListener((observable, oldProduct, selectedProduct) -> {
             if (selectedProduct != null) {
                 tfpNombre.setText(selectedProduct.getNombre());
@@ -869,15 +980,42 @@ private boolean existeCorreoEnLista(String correo) {
                 tfpFechaActualizacion.setText(String.valueOf(selectedProduct.getFecha_actualizacion()));
                 tfpFechaCreacion.setText(String.valueOf(selectedProduct.getFecha_creacion()));
 
-               
                 if (selectedProduct.getImagenB64() != null && !selectedProduct.getImagenB64().isEmpty()) {
                     imagenActualizar.setImage(base64ToImage(selectedProduct.getImagenB64()));
                 } else {
-                    imagenActualizar.setImage(null); 
+                    imagenActualizar.setImage(null);
                 }
+                
+                validarCampoNombre();
+                validarCampoPrecio();
+                validarCampoStock();
+                validarCampoDescripcion();
+                validarCampoCategoria();
             }
         });
+        
+        tfpNombre.setOnKeyReleased(e -> validarCampoNombre());
+        tfpPrecio.setOnKeyReleased(e -> {
+            validarCampoPrecio();
+            calcularPrecioConIva();
+        });
+        tfpDescripcion.setOnKeyReleased(e -> validarCampoDescripcion());
+        tfpStock.setOnKeyReleased(e -> validarCampoStock());
+        tfpCategoria.setOnKeyReleased(e -> validarCampoCategoria());
+
+
+
     }
+
+    
+    private void mostrarAlertaError(String titulo, String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.ERROR);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
+    }
+
     
     
     @FXML
@@ -895,13 +1033,21 @@ private boolean existeCorreoEnLista(String correo) {
     
     private TextField tfuId;
     private TextField tfuCorreo;
-    private TextField tfuPermisos;
+    private ComboBox<String> tfuPermisos;
     private TextField tfuNombre;
     private TextField tfuApellidos;
     private TextField tfuTelefono;
     private TextField tfuDireccion;
     private TextField tfuFechaRegistro;
-    
+
+    // Tooltips como variables de clase para reutilización
+    private final Tooltip tooltipCorreo = new Tooltip("Introduce un correo electrónico válido.");
+    private final Tooltip tooltipPermisos = new Tooltip("Los permisos deben ser 'admin' o 'user'.");
+    private final Tooltip tooltipNombreUsuario = new Tooltip("El nombre no puede estar vacío.");
+    private final Tooltip tooltipApellidos = new Tooltip("Los apellidos no pueden estar vacíos.");
+    private final Tooltip tooltipTelefono = new Tooltip("Introduce un número de teléfono válido (9 dígitos).");
+    private final Tooltip tooltipDireccion = new Tooltip("La dirección no puede estar vacía.");
+
     @FXML
     void verPaneUsuarios(ActionEvent event) {
         paneProductos.setVisible(false);
@@ -912,54 +1058,220 @@ private boolean existeCorreoEnLista(String correo) {
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
         identificadorTabla = 3;
-        
+
+        // Inicializar campos de usuario
         tfuId = new TextField();
         tfuCorreo = new TextField();
-        tfuPermisos = new TextField();
+        tfuPermisos = new ComboBox();
         tfuNombre = new TextField();
         tfuApellidos = new TextField();
         tfuTelefono = new TextField();
         tfuDireccion = new TextField();
         tfuFechaRegistro = new TextField();
+
         tfuId.setEditable(false);
         tfuFechaRegistro.setEditable(false);
-        
+
+        // Configurar interfaz
         Label titulo = new Label("Editar usuario:");
         titulo.setStyle("-fx-font-size: 20px;");
-        Label labelId = new Label("ID:");
-        Label labelCorreo = new Label("Correo:");
-        Label labelPermisos = new Label("Permisos:");
-        Label labelNombre = new Label("Nombre:");
-        Label labelApellidos = new Label("Apellidos:");
-        Label labelTelefono = new Label("Teléfono:");
-        Label labelDireccion = new Label("Dirección:");
-        Label labelFechaRegistro = new Label("Fecha de registro:");
-        
-        vboxEditarItem.getChildren().addAll(titulo,
-                labelId, tfuId, labelCorreo, tfuCorreo, labelPermisos, tfuPermisos,
-                labelNombre, tfuNombre, labelApellidos, tfuApellidos, labelTelefono,
-                tfuTelefono, labelDireccion, tfuDireccion, labelFechaRegistro, tfuFechaRegistro
-        );
-        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
+        tfuPermisos.getItems().addAll("administrador", "cliente", "empleado");
 
+        vboxEditarItem.getChildren().addAll(
+            titulo,
+            new Label("ID:"), tfuId,
+            new Label("Correo:"), tfuCorreo,
+            new Label("Permisos:"), tfuPermisos,
+            new Label("Nombre:"), tfuNombre,
+            new Label("Apellidos:"), tfuApellidos,
+            new Label("Teléfono:"), tfuTelefono,
+            new Label("Dirección:"), tfuDireccion,
+            new Label("Fecha de registro:"), tfuFechaRegistro
+        );
+
+        VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
         vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
         vboxEditarItem.setSpacing(10);
         vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
+        // Listener para selección de usuario
         tablaUsuarios.getSelectionModel().selectedItemProperty().addListener((observable, oldUsuario, selectedUsuario) -> {
-            if (selectedUsuario != null) {
-
+            if (selectedUsuario != null && tfuId != null) { // Verificación de nulidad
                 tfuId.setText(String.valueOf(selectedUsuario.getId()));
                 tfuCorreo.setText(String.valueOf(selectedUsuario.getCorreo()));
-                tfuPermisos.setText(String.valueOf(selectedUsuario.getRol()));
+                tfuPermisos.setValue(String.valueOf(selectedUsuario.getRol()));
                 tfuNombre.setText(selectedUsuario.getNombre());
                 tfuApellidos.setText(selectedUsuario.getApellido());
                 tfuTelefono.setText(String.valueOf(selectedUsuario.getTelefono()));
                 tfuDireccion.setText(selectedUsuario.getDireccion());
                 tfuFechaRegistro.setText(String.valueOf(selectedUsuario.getFecha_registro()));
+
+                // Validar campos
+                validarCampoCorreo();
+                validarCampoPermisos();
+                validarCampoNombreUsuario();
+                validarCampoApellidos();
+                validarCampoTelefono();
+                validarCampoDireccion();
             }
         });
+
+        // Listeners para validación en tiempo real
+        if (tfuCorreo != null) tfuCorreo.setOnKeyReleased(e -> validarCampoCorreo());
+        if (tfuPermisos != null) tfuPermisos.setOnAction(e -> validarCampoPermisos());
+        if (tfuNombre != null) tfuNombre.setOnKeyReleased(e -> validarCampoNombreUsuario());
+        if (tfuApellidos != null) tfuApellidos.setOnKeyReleased(e -> validarCampoApellidos());
+        if (tfuTelefono != null) tfuTelefono.setOnKeyReleased(e -> validarCampoTelefono());
+        if (tfuDireccion != null) tfuDireccion.setOnKeyReleased(e -> validarCampoDireccion());
     }
+
+    // Métodos de validación mejorados con verificación de nulidad
+    private boolean validarCampoCorreo() {
+        if (tfuCorreo == null) return false;
+
+        if (!tfuCorreo.getText().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            tfuCorreo.setStyle("-fx-border-color: red;");
+            tfuCorreo.setTooltip(tooltipCorreo);
+            return false;
+        } else {
+            tfuCorreo.setStyle(null);
+            tfuCorreo.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoPermisos() {
+        if (tfuPermisos == null) return false;
+
+        String permisos = tfuPermisos.getValue().toLowerCase();
+        if (!permisos.equals("administrador") && !permisos.equals("empleado") && !permisos.equals("cliente")) {
+            tfuPermisos.setStyle("-fx-border-color: red;");
+            tfuPermisos.setTooltip(tooltipPermisos);
+            return false;
+        } else {
+            tfuPermisos.setStyle(null);
+            tfuPermisos.setTooltip(null);
+            return true;
+        }
+    }
+    
+
+    private boolean validarCampoNombreUsuario() {
+        if (tfuNombre == null) return false;
+
+        if (tfuNombre.getText().trim().isEmpty()) {
+            tfuNombre.setStyle("-fx-border-color: red;");
+            tfuNombre.setTooltip(tooltipNombreUsuario);
+            return false;
+        } else {
+            tfuNombre.setStyle(null);
+            tfuNombre.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoApellidos() {
+        if (tfuApellidos == null) return false;
+
+        if (tfuApellidos.getText().trim().isEmpty()) {
+            tfuApellidos.setStyle("-fx-border-color: red;");
+            tfuApellidos.setTooltip(tooltipApellidos);
+            return false;
+        } else {
+            tfuApellidos.setStyle(null);
+            tfuApellidos.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoTelefono() {
+        if (tfuTelefono == null) return false;
+
+        if (!tfuTelefono.getText().matches("\\d{9}")) {
+            tfuTelefono.setStyle("-fx-border-color: red;");
+            tfuTelefono.setTooltip(tooltipTelefono);
+            return false;
+        } else {
+            tfuTelefono.setStyle(null);
+            tfuTelefono.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarCampoDireccion() {
+        if (tfuDireccion == null) return false;
+
+        if (tfuDireccion.getText().trim().isEmpty()) {
+            tfuDireccion.setStyle("-fx-border-color: red;");
+            tfuDireccion.setTooltip(tooltipDireccion);
+            return false;
+        } else {
+            tfuDireccion.setStyle(null);
+            tfuDireccion.setTooltip(null);
+            return true;
+        }
+    }
+
+    private boolean validarTodosLosCamposUsuario() {
+        return validarCampoCorreo() &&
+               validarCampoPermisos() &&
+               validarCampoNombreUsuario() &&
+               validarCampoApellidos() &&
+               validarCampoTelefono() &&
+               validarCampoDireccion();
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     private TextField tfvId;
     private ComboBox<String> cbCliente;
@@ -979,7 +1291,15 @@ private boolean existeCorreoEnLista(String correo) {
     private List<Producto> listaProductosDisponibles;
     ListView<Producto> listViewProductosVenta;
     
-   
+    private final Tooltip tooltipCliente = new Tooltip("Selecciona un cliente.");
+    private final Tooltip tooltipEmpleado = new Tooltip("Selecciona un empleado.");
+    private final Tooltip tooltipFecha = new Tooltip("Selecciona una fecha válida.");
+    private final Tooltip tooltipDescripcionVenta = new Tooltip("La descripción no puede estar vacía.");
+    private final Tooltip tooltipTotal = new Tooltip("El total debe ser un número válido (ej: 10.99).");
+    private final Tooltip tooltipMetodoPago = new Tooltip("El método de pago no puede estar vacío.");
+    private final Tooltip tooltipTipoVenta = new Tooltip("El tipo de venta no puede estar vacío.");
+    private final Tooltip tooltipEstado = new Tooltip("El estado no puede estar vacío.");
+    private final Tooltip tooltipProductos = new Tooltip("Debe haber al menos un producto en la venta.");
 
         @FXML
         void verPaneVentas(ActionEvent event) {
@@ -994,16 +1314,6 @@ private boolean existeCorreoEnLista(String correo) {
             vboxEditarItem.setVisible(true);
             identificadorTabla = 4;
 
-            inicializarComponentesUI();
-
-            configurarInterfaz();
-
-            cargarDatosIniciales();
-
-            configurarEventos();
-        }
-
-        private void inicializarComponentesUI() {
             tfvId = new TextField();
             cbCliente = new ComboBox<>();
             cbEmpleado = new ComboBox<>();
@@ -1021,9 +1331,7 @@ private boolean existeCorreoEnLista(String correo) {
 
             listaProductosVentaSeleccionada = new ArrayList<>();
             listaProductosDisponibles = new ArrayList<>();
-        }
 
-        private void configurarInterfaz() {
             Label titulo = new Label("Editar venta: ");
             titulo.setStyle("-fx-font-size: 20px;");
 
@@ -1053,9 +1361,146 @@ private boolean existeCorreoEnLista(String correo) {
             vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
             vboxEditarItem.setSpacing(10);
             vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
-        }
 
-        private void cargarDatosIniciales() {
+            // Listener para selección de venta
+        tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
+            if (selectedVenta != null) {
+                // Cargar datos primero
+                listaProductosVentaSeleccionada.clear();
+                listViewProductosVenta.getItems().clear();
+
+                tfvId.setText(String.valueOf(selectedVenta.getId()));
+
+            
+                for (Usuario usuario : lstUsuarios) {
+                    if (usuario.getId() == selectedVenta.getCliente_id()) {
+                        cbCliente.setValue(usuario.getNombre() + " " + usuario.getApellido());
+                    }
+                    if (usuario.getId() == selectedVenta.getEmpleado_id()) {
+                        cbEmpleado.setValue(usuario.getNombre() + " " + usuario.getApellido());
+                    }
+                }
+
+           
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                dpFecha.setValue(LocalDate.parse(selectedVenta.getFecha().toString(), formatter));
+
+
+                tfvDescripcion.setText(selectedVenta.getDescripcion());
+                tfvTotal.setText(String.format(""+selectedVenta.getTotal()));
+                tfvMetodoPago.setText(selectedVenta.getMetodo_pago());
+                tfvTipoVenta.setText(selectedVenta.getTipo_venta());
+                tfvEstado.setText(selectedVenta.getEstado());
+
+                idVenta = selectedVenta.getId();
+
+         
+                for (DetalleVenta dv : lstDetalleVenta) {
+                    if (dv.getVenta_id() == selectedVenta.getId()) {
+                        listaProductosVentaSeleccionada.add(dv);
+                        for (Producto p : lstProductos) {
+                            if (dv.getProducto_id() == p.getId()) {
+                                listViewProductosVenta.getItems().add(p);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                    // Limpiar estilos de validación
+                cbCliente.setStyle(null);
+                cbEmpleado.setStyle(null);
+                dpFecha.setStyle(null);
+                tfvDescripcion.setStyle(null);
+                tfvTotal.setStyle(null);
+                tfvMetodoPago.setStyle(null);
+                tfvTipoVenta.setStyle(null);
+                tfvEstado.setStyle(null);
+                listViewProductosVenta.setStyle(null);
+                cbProductosDisponibles.setStyle(null);
+                actualizarTotalVenta();
+                
+                validarCampoCliente();
+                validarCampoEmpleado();
+                validarCampoFecha();
+                validarCampoDescripcionVenta();
+                validarCampoTotal();
+                validarCampoMetodoPago();
+                validarCampoTipoVenta();
+                validarCampoEstado();
+                validarCampoProductos();
+            }
+        });
+
+        // Evento para añadir producto
+        añadirProducto.setOnAction(evento -> {
+            Producto producto = cbProductosDisponibles.getSelectionModel().getSelectedItem();
+
+            if (producto != null) {
+                agregarProductoAVenta(producto);
+                actualizarTotalVenta();
+                validarCampoProductos(); // Validar después de añadir
+            } else {
+                mostrarAlerta("Advertencia", "Seleccione un producto para añadir");
+                cbProductosDisponibles.setStyle("-fx-border-color: red;");
+            }
+        });
+
+        // Evento para eliminar producto
+        eliminarProducto.setOnAction(evento -> {
+            Producto producto = listViewProductosVenta.getSelectionModel().getSelectedItem();
+
+            if (producto != null) {
+                eliminarProductoDeVenta(producto);
+                actualizarTotalVenta();
+                validarCampoProductos(); // Validar después de eliminar
+            } else {
+                mostrarAlerta("Advertencia", "Seleccione un producto para eliminar");
+                listViewProductosVenta.setStyle("-fx-border-color: red;");
+            }
+        });
+
+        // Configurar validación cuando pierden el foco
+        
+            
+            
+            
+            if (cbCliente != null) cbCliente.setOnAction(e -> validarCampoCliente());
+            if (cbEmpleado != null) cbEmpleado.setOnAction(e -> validarCampoEmpleado());
+            if (dpFecha != null) dpFecha.setOnAction(e -> validarCampoFecha());
+            if (tfvDescripcion != null) tfvDescripcion.setOnKeyReleased(e -> validarCampoDescripcionVenta());
+            if (tfvTotal != null) tfvTotal.setOnKeyReleased(e -> validarCampoTotal());
+            if (tfvMetodoPago != null) tfvMetodoPago.setOnKeyReleased(e -> validarCampoMetodoPago());
+            if (tfvTipoVenta != null) tfvTipoVenta.setOnKeyReleased(e -> validarCampoTipoVenta());
+            if (tfvEstado != null) tfvEstado.setOnKeyReleased(e -> validarCampoEstado());
+            
+            if (añadirProducto != null) añadirProducto.setOnAction(e -> {
+                if (cbProductosDisponibles.getValue() != null) {
+                    //listViewProductosVenta.getItems().add(cbProductosDisponibles.getValue());
+                    Producto producto = cbProductosDisponibles.getSelectionModel().getSelectedItem();
+
+                    if (producto != null) {
+                        agregarProductoAVenta(producto);
+                    } else {
+                        mostrarAlerta("Advertencia", "Seleccione un producto para añadir");
+                    }
+                    actualizarTotalVenta();
+                    validarCampoProductos();
+                }
+            });
+            if (eliminarProducto != null) eliminarProducto.setOnAction(e -> {
+                if (listViewProductosVenta.getSelectionModel().getSelectedItem() != null) {
+                    Producto producto = listViewProductosVenta.getSelectionModel().getSelectedItem();
+                    if (producto != null) {
+                    eliminarProductoDeVenta(producto);
+                    } else {
+                        mostrarAlerta("Advertencia", "Seleccione un producto para eliminar");
+                    }
+                    actualizarTotalVenta();
+                    validarCampoProductos();
+                }
+            });
+            
             List<String> listaClientes = new ArrayList<>();
             List<String> listaEmpleados = new ArrayList<>();
 
@@ -1072,35 +1517,186 @@ private boolean existeCorreoEnLista(String correo) {
 
             actualizarListaProductosDisponibles();
         }
+        
+        
+        private boolean validarCampoCliente() {
+            if (cbCliente == null) return false;
 
-        private void configurarEventos() {
-            tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
-                if (selectedVenta != null) {
-                    cargarDatosVentaSeleccionada(selectedVenta);
-                }
-            });
-
-            añadirProducto.setOnAction(evento -> {
-                Producto producto = cbProductosDisponibles.getSelectionModel().getSelectedItem();
-
-                if (producto != null) {
-                    agregarProductoAVenta(producto);
-                } else {
-                    mostrarAlerta("Advertencia", "Seleccione un producto para añadir");
-                }
-            });
-
-            eliminarProducto.setOnAction(evento -> {
-                Producto producto = listViewProductosVenta.getSelectionModel().getSelectedItem();
-
-                if (producto != null) {
-                    eliminarProductoDeVenta(producto);
-                } else {
-                    mostrarAlerta("Advertencia", "Seleccione un producto para eliminar");
-                }
-            });
+            if (cbCliente.getValue() == null || cbCliente.getValue().isEmpty()) {
+                cbCliente.setStyle("-fx-border-color: red;");
+                cbCliente.setTooltip(tooltipCliente);
+                return false;
+            } else {
+                cbCliente.setStyle(null);
+                cbCliente.setTooltip(null);
+                return true;
+            }
         }
 
+        private boolean validarCampoEmpleado() {
+            if (cbEmpleado == null) return false;
+
+            if (cbEmpleado.getValue() == null || cbEmpleado.getValue().isEmpty()) {
+                cbEmpleado.setStyle("-fx-border-color: red;");
+                cbEmpleado.setTooltip(tooltipEmpleado);
+                return false;
+            } else {
+                cbEmpleado.setStyle(null);
+                cbEmpleado.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoFecha() {
+            if (dpFecha == null) return false;
+
+            if (dpFecha.getValue() == null) {
+                dpFecha.setStyle("-fx-border-color: red;");
+                dpFecha.setTooltip(tooltipFecha);
+                return false;
+            } else {
+                dpFecha.setStyle(null);
+                dpFecha.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoDescripcionVenta() {
+            if (tfvDescripcion == null) return false;
+
+            if (tfvDescripcion.getText().trim().isEmpty()) {
+                tfvDescripcion.setStyle("-fx-border-color: red;");
+                tfvDescripcion.setTooltip(tooltipDescripcion);
+                return false;
+            } else {
+                tfvDescripcion.setStyle(null);
+                tfvDescripcion.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoTotal() {
+            if (tfvTotal == null) return false;
+
+            if (!tfvTotal.getText().matches("\\d+(\\.\\d{1,2})?")) {
+                tfvTotal.setStyle("-fx-border-color: red;");
+                tfvTotal.setTooltip(tooltipTotal);
+                return false;
+            } else {
+                tfvTotal.setStyle(null);
+                tfvTotal.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoMetodoPago() {
+            if (tfvMetodoPago == null) return false;
+
+            if (tfvMetodoPago.getText().trim().isEmpty()) {
+                tfvMetodoPago.setStyle("-fx-border-color: red;");
+                tfvMetodoPago.setTooltip(tooltipMetodoPago);
+                return false;
+            } else {
+                tfvMetodoPago.setStyle(null);
+                tfvMetodoPago.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoTipoVenta() {
+            if (tfvTipoVenta == null) return false;
+
+            if (tfvTipoVenta.getText().trim().isEmpty()) {
+                tfvTipoVenta.setStyle("-fx-border-color: red;");
+                tfvTipoVenta.setTooltip(tooltipTipoVenta);
+                return false;
+            } else {
+                tfvTipoVenta.setStyle(null);
+                tfvTipoVenta.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoEstado() {
+            if (tfvEstado == null) return false;
+
+            if (tfvEstado.getText().trim().isEmpty()) {
+                tfvEstado.setStyle("-fx-border-color: red;");
+                tfvEstado.setTooltip(tooltipEstado);
+                return false;
+            } else {
+                tfvEstado.setStyle(null);
+                tfvEstado.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarCampoProductos() {
+            if (listViewProductosVenta == null) return false;
+
+            if (listViewProductosVenta.getItems().isEmpty()) {
+                listViewProductosVenta.setStyle("-fx-border-color: red;");
+                listViewProductosVenta.setTooltip(tooltipProductos);
+                return false;
+            } else {
+                listViewProductosVenta.setStyle(null);
+                listViewProductosVenta.setTooltip(null);
+                return true;
+            }
+        }
+
+        private boolean validarTodosLosCamposVenta() {
+            return validarCampoCliente() &&
+                   validarCampoEmpleado() &&
+                   validarCampoFecha() &&
+                   validarCampoDescripcionVenta() &&
+                   validarCampoTotal() &&
+                   validarCampoMetodoPago() &&
+                   validarCampoTipoVenta() &&
+                   validarCampoEstado() &&
+                   validarCampoProductos();
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        
+
+    
+
+    private void actualizarTotalVenta() {
+        double total = 0.0;
+        for (DetalleVenta dv : listaProductosVentaSeleccionada) {
+            total += dv.getPrecio_unitario();
+        }
+        tfvTotal.setText(String.format(""+total));
+        validarCampoTotal();
+    }
+    
         private void agregarProductoAVenta(Producto producto) {
             if (producto.getStock() <= 0) {
                 mostrarAlerta("Error", "No hay stock disponible para este producto");
@@ -1224,69 +1820,10 @@ private boolean existeCorreoEnLista(String correo) {
         
 
         private void cargarDatosVentaSeleccionada(Venta venta) {
-            listaProductosVentaSeleccionada.clear();
-            listViewProductosVenta.getItems().clear();
-
-            tfvId.setText(String.valueOf(venta.getId()));
-
             
-            for (Usuario usuario : lstUsuarios) {
-                if (usuario.getId() == venta.getCliente_id()) {
-                    cbCliente.setValue(usuario.getNombre() + " " + usuario.getApellido());
-                }
-                if (usuario.getId() == venta.getEmpleado_id()) {
-                    cbEmpleado.setValue(usuario.getNombre() + " " + usuario.getApellido());
-                }
-            }
-
-           
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            dpFecha.setValue(LocalDate.parse(venta.getFecha().toString(), formatter));
-
-           
-            tfvDescripcion.setText(venta.getDescripcion());
-            tfvTotal.setText(String.format("%.2f", venta.getTotal()));
-            tfvMetodoPago.setText(venta.getMetodo_pago());
-            tfvTipoVenta.setText(venta.getTipo_venta());
-            tfvEstado.setText(venta.getEstado());
-
-            idVenta = venta.getId();
-
-         
-            for (DetalleVenta dv : lstDetalleVenta) {
-                if (dv.getVenta_id() == venta.getId()) {
-                    listaProductosVentaSeleccionada.add(dv);
-                    for (Producto p : lstProductos) {
-                        if (dv.getProducto_id() == p.getId()) {
-                            listViewProductosVenta.getItems().add(p);
-                            break;
-                        }
-                    }
-                }
-            }
         }
 
-        private void actualizarTotalVenta() {
-            double nuevoTotal = listaProductosVentaSeleccionada.stream()
-                    .mapToDouble(DetalleVenta::getPrecio_unitario)
-                    .sum();
-
-            tfvTotal.setText(String.format("%.2f", nuevoTotal));
-
-       
-            Venta ventaActualizada = new Venta(
-                idVenta,
-                obtenerIdCliente(cbCliente.getValue()),
-                obtenerIdEmpleado(cbEmpleado.getValue()),
-                dpFecha.getValue(),
-                tfvDescripcion.getText(),
-                nuevoTotal,
-                tfvMetodoPago.getText(),
-                tfvTipoVenta.getText(),
-                tfvEstado.getText()
-            );
-            ventaDAO.actualizarVenta(ventaActualizada);
-        }
+        
 
         private void actualizarListaProductosDisponibles() {
             listaProductosDisponibles.clear();
@@ -1317,7 +1854,7 @@ private boolean existeCorreoEnLista(String correo) {
         
     
 
-       private int obtenerIdCliente(String nombreCompleto) {
+       /*private int obtenerIdCliente(String nombreCompleto) {
            if (nombreCompleto == null || nombreCompleto.isEmpty()) {
                return -1;
            }
@@ -1331,7 +1868,7 @@ private boolean existeCorreoEnLista(String correo) {
 
            System.err.println("Cliente no encontrado: " + nombreCompleto);
            return -1; 
-       }
+       }*/
 
     
        private int obtenerIdEmpleado(String nombreCompleto) {

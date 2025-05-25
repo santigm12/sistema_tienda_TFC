@@ -33,7 +33,6 @@ public class ConexionSingleton {
         cerrarConexionExistente();
         
         try {
-            // Tu lógica actual de conexión
             conexion = DriverManager.getConnection("jdbc:mariadb://..."); 
             System.out.println("Conexión (re)establecida");
             return conexion;
@@ -62,7 +61,7 @@ public class ConexionSingleton {
             IP = (String) properties.get("IP");
         } catch (FileNotFoundException e) {
             System.out.println("No se pudo encontrar el archivo de propiedades para IP, se establece localhost por defecto");
-            IP = "localhost";
+            IP = "54.173.46.205";
         }
 
         InputStream input = ConexionSingleton.class.getClassLoader().getResourceAsStream("bbdd.properties");
@@ -74,7 +73,7 @@ public class ConexionSingleton {
             PORT = properties.getProperty("PORT", "3306");
             BBDD = properties.getProperty("BBDD", "sistema_tienda");
             USER = properties.getProperty("USER", "admin");
-            PWD = properties.getProperty("PWD", "lKZ8YTmwapdD");
+            PWD = properties.getProperty("PWD", "WXzU4jdi9wWy");
 
             
             Connection conn;

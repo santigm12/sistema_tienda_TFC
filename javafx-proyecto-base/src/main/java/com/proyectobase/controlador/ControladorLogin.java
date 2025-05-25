@@ -7,11 +7,13 @@ import com.proyectobase.modelo.Usuario;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ResourceBundle;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,6 +23,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -48,25 +51,71 @@ public class ControladorLogin implements Initializable {
 
     @FXML
     private TextField txtUsuario;
+    
+    private void loginAutomatico() {
+}
 
-    @FXML
-        void iniciarSesion(ActionEvent event) {
-        String correo = txtUsuario.getText().trim();
-        String password = txtContrasena.getText().trim();
+    private static final boolean MODO_DESARROLLO = true;
 
+@FXML
+void iniciarSesion(ActionEvent event) {
+    if (MODO_DESARROLLO) {
+        // Simulas un usuario autenticado sin verificar nada
+        Usuario usuarioFalso = new Usuario(
+        1,                                          // id
+        "dev@ejemplo.com",                          // correo
+        "$2a$10$devHashedPassword1234567890",       // password_hash (ficticio, no se usará)
+        "administrador",                                    // rol
+        "NombreDev",                                // nombre
+        "ApellidoDev",                              // apellido
+        "600123456",                                // teléfono
+        "Calle Falsa 123",                          // dirección
+        new java.util.Date(),                                 // fecha_registro (ahora mismo)
+        1                                           // activo
+    ); // O lo que uses
+
+        SessionManager.getInstance().setUsuarioLogueado(usuarioFalso);
+        abrirVentanaVenta();
+        return;
+    }
+
+    String correo = txtUsuario.getText().trim();
+    String password = txtContrasena.getText().trim();
+
+    if (correo.isEmpty() || password.isEmpty()) {
+        mostrarAlertaError("Error", "Por favor ingrese ambos campos: usuario y contraseña");
+        return;
+    }
+
+    try {
         if (!obtenerUsuario(correo)) {
-            System.out.println("Usuario no encontrado");
+            mostrarAlertaError("Error de autenticación", "Usuario no encontrado");
             return;
         }
 
-        if (!BCrypt.checkpw(password, usuarioLogin.getPassword_hash())) {
-            System.out.println("Contraseña incorrecta");
+        String hash = usuarioLogin.getPassword_hash().replace("$2y$", "$2a$");
+        if (!BCrypt.checkpw(password, hash)) {
+            mostrarAlertaError("Error de autenticación", "Contraseña incorrecta");
             return;
         }
 
-        // Solo llamar una vez a abrirVentanaVenta()
         SessionManager.getInstance().setUsuarioLogueado(usuarioLogin);
         abrirVentanaVenta();
+
+    } catch (Exception e) {
+        mostrarAlertaError("Error inesperado", "Ocurrió un error durante el inicio de sesión");
+        e.printStackTrace();
+    }
+}
+
+
+    
+    private void mostrarAlertaError(String titulo, String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.ERROR);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
     }
 
     private ObservableList obtenerListaUsuarios() {
