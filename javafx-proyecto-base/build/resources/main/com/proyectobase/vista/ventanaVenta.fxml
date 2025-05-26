@@ -15,217 +15,260 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<TabPane tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.proyectobase.controlador.ControladorVenta">
-  <tabs>
-    <Tab closable="false" text="VENTA">
-      <content>
-        <AnchorPane>
-          <children>
-            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-              <children>
-                <VBox fx:id="vboxPrecio" minWidth="250" prefWidth="250" HBox.hgrow="NEVER">
-                  <padding>
-                    <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
-                  </padding>
-                  <children>
-                    <TextField fx:id="campoCodigoOculto" focusTraversable="false" opacity="0.0" />
-                              <Label text="Total:">
-                                 <font>
-                                    <Font size="30.0" />
-                                 </font>
-                              </Label>
-                    <Label fx:id="lblPrecio" prefHeight="60.0" prefWidth="190.0" text="0.0">
-                      <font>
-                        <Font size="36.0" />
-                      </font>
-                    </Label>
-                    <ImageView fx:id="imagenCodigo" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
-                  </children>
-                </VBox>
-                <VBox fx:id="vboxLista" HBox.hgrow="ALWAYS">
-                  <children>
-                    <TableView fx:id="tablaProductos" VBox.vgrow="ALWAYS">
-                      <columnResizePolicy>
-                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                      </columnResizePolicy>
-                      <columns>
-                        <TableColumn fx:id="tc_imagen" style="-fx-alignment: center;" text="Imagen" />
-                        <TableColumn fx:id="tc_id" style="-fx-alignment: center;" text="ID" />
-                        <TableColumn fx:id="tc_nombre" style="-fx-alignment: center;" text="Nombre" />
-                        <TableColumn fx:id="tc_precio" style="-fx-alignment: center;" text="Precio" />
-                        <TableColumn fx:id="tc_precioIVA" style="-fx-alignment: center;" text="Precio + IVA" />
-                      </columns>
-                    </TableView>
-                    <HBox alignment="CENTER_RIGHT" spacing="20.0">
-                      <children>
-                        <Button fx:id="btnQuitarProducto" mnemonicParsing="false" onAction="#quitarProductoListaVenta" text="Quitar producto" />
-                        <Button fx:id="btnFinalizarCompra" mnemonicParsing="false" onAction="#finalizarCompra" text="Finalizar compra" />
-                      </children>
-                      <padding>
-                        <Insets bottom="10.0" right="20.0" top="10.0" />
-                      </padding>
-                    </HBox>
-                  </children>
-                </VBox>
-              </children>
-            </HBox>
-          </children>
-        </AnchorPane>
-      </content>
-    </Tab>
+<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.proyectobase.controlador.ControladorVenta">
+   <HBox alignment="CENTER_LEFT" prefHeight="71.0" prefWidth="1133.0">
+   <children>
+      <!-- Contenido izquierdo (imagen y label) -->
+      <HBox alignment="CENTER_LEFT" spacing="10">
+         <children>
+            <ImageView fx:id="imgCabezera" fitHeight="68.0" fitWidth="68.0" pickOnBounds="true" preserveRatio="true" />
+            <Label fx:id="lblCabezera" text="Este es el titulo de la empresa">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
+         </children>
+      </HBox>
+      
+      <!-- Contenedor derecho expandible -->
+      <HBox alignment="CENTER_RIGHT" prefHeight="68.0" prefWidth="979.0" HBox.hgrow="ALWAYS">
+         <children>
+            <!-- Botón de cerrar sesión en la esquina derecha -->
+            <Button fx:id="btnCerrarSesion" alignment="CENTER" contentDisplay="TOP" onAction="#cerrarSesion" text="Cerrar Sesión">
+                  <graphic>
+                     <ImageView fx:id="imgBotonSalir" fitHeight="55.0" fitWidth="55.0" pickOnBounds="true" preserveRatio="true" />
+                  </graphic></Button>
+         </children>
+      </HBox>
+   </children>
+   <padding>
+      <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+   </padding>
+</HBox>
 
-    <Tab fx:id="tabAdmin" closable="false" text="ADMIN">
-      <content>
-        <AnchorPane>
-          <children>
-            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-              <children>
-                <VBox alignment="CENTER" minWidth="200" prefHeight="1085.0" prefWidth="251.0" spacing="20.0" HBox.hgrow="NEVER">
-                  <padding>
-                    <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-                  </padding>
-                  <children>
-                    <Button fx:id="btnProductos" contentDisplay="CENTER" onAction="#verPaneProductos" text="Productos">
-                      <graphic><ImageView fx:id="imgBtnProductos" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
-                    </Button>
-                    <Button fx:id="btnSesiones" contentDisplay="CENTER" onAction="#verPaneSesion" text="Sesiones">
-                      <graphic><ImageView fx:id="imgBtnSesiones" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
-                    </Button>
-                    <Button fx:id="btnUsuarios" contentDisplay="CENTER" onAction="#verPaneUsuarios" text="Usuarios">
-                      <graphic><ImageView fx:id="imgBtnUsuarios" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
-                    </Button>
-                    <Button fx:id="btnVentas" contentDisplay="CENTER" onAction="#verPaneVentas" text="Ventas">
-                      <graphic><ImageView fx:id="imgBtnVentas" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" /></graphic>
-                    </Button>
-                    <Button fx:id="btnCodigoBarras" contentDisplay="CENTER" onAction="#verPaneCodigoBarras" text="Códigos de barras">
-                      <graphic><ImageView fitHeight="125.0" fitWidth="200.0" preserveRatio="true" /></graphic>
-                    </Button>
-                    
-                  </children>
-                </VBox>
+    
+    <!-- TabPane principal -->
+    <TabPane fx:id="tabPanePrincipal" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="30">
+        <tabs>
+            <Tab fx:id="tabVenta" closable="false" text="VENTA">
+                <content>
+                    <AnchorPane>
+                        <children>
+                            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                <children>
+                                    <VBox fx:id="vboxPrecio" minWidth="250" prefWidth="250" HBox.hgrow="NEVER">
+                                        <padding>
+                                            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                                        </padding>
+                                        <children>
+                                            <TextField fx:id="campoCodigoOculto" focusTraversable="false" opacity="0.0" />
+                                            <Label text="Total:">
+                                                <font>
+                                                    <Font size="30.0" />
+                                                </font>
+                                            </Label>
+                                            <Label fx:id="lblPrecio" prefHeight="60.0" prefWidth="190.0" text="0.0">
+                                                <font>
+                                                    <Font size="36.0" />
+                                                </font>
+                                            </Label>
+                                            <ImageView fx:id="imagenCodigo" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
+                                        </children>
+                                    </VBox>
+                                    <VBox fx:id="vboxLista" HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <TableView fx:id="tablaProductos" VBox.vgrow="ALWAYS">
+                                                <columnResizePolicy>
+                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                </columnResizePolicy>
+                                                <columns>
+                                                    <TableColumn fx:id="tc_imagen" style="-fx-alignment: center;" text="Imagen" />
+                                                    <TableColumn fx:id="tc_id" style="-fx-alignment: center;" text="ID" />
+                                                    <TableColumn fx:id="tc_nombre" style="-fx-alignment: center;" text="Nombre" />
+                                                    <TableColumn fx:id="tc_precio" style="-fx-alignment: center;" text="Precio" />
+                                                    <TableColumn fx:id="tc_precioIVA" style="-fx-alignment: center;" text="Precio + IVA" />
+                                                </columns>
+                                            </TableView>
+                                            <HBox alignment="CENTER_RIGHT" spacing="20.0">
+                                                <children>
+                                                    <Button fx:id="btnQuitarProducto" mnemonicParsing="false" onAction="#quitarProductoListaVenta" text="Quitar producto" />
+                                                    <Button fx:id="btnFinalizarCompra" mnemonicParsing="false" onAction="#finalizarCompra" text="Finalizar compra" />
+                                                </children>
+                                                <padding>
+                                                    <Insets bottom="10.0" right="20.0" top="10.0" />
+                                                </padding>
+                                            </HBox>
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </HBox>
+                        </children>
+                    </AnchorPane>
+                </content>
+            </Tab>
 
-                <VBox HBox.hgrow="ALWAYS">
-                  <children>
-                    <StackPane VBox.vgrow="ALWAYS">
-                      <children>
-                        <AnchorPane fx:id="paneProductos">
-                          <children>
-                            <TableView fx:id="tablaProductosAdmin" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                              <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                              </columnResizePolicy>
-                              <columns>
-                                <TableColumn fx:id="pColumnID" text="ID" />
-                                <TableColumn fx:id="pColumnCodigoBarras" text="Codigo de barras" />
-                                <TableColumn fx:id="pColumnNombre" text="Nombre" />
-                                <TableColumn fx:id="pColumnPrecio" text="Precio" />
-                                <TableColumn fx:id="pColumnPrecioIva" text="Precio + IVA" />
-                                <TableColumn fx:id="pColumnStock" text="Stock" />
-                                <TableColumn fx:id="pColumnDescripcion" text="Descripción" />
-                                <TableColumn fx:id="pColumnImagen" text="Imagen" />
-                                <TableColumn fx:id="pColumnCategoria" text="Categoría" />
-                                <TableColumn fx:id="pColumnFechaCreacion" text="Fecha creación" />
-                                <TableColumn fx:id="pColumnFechaActualizacion" text="Fecha actualización" />
-                              </columns>
-                            </TableView>
-                          </children>
-                        </AnchorPane>
+            <Tab fx:id="tabAdmin" closable="false" text="ADMIN">
+                <content>
+                    <AnchorPane>
+                        <children>
+                            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                <children>
+                                    <VBox alignment="CENTER" minWidth="200" prefHeight="1085.0" prefWidth="251.0" spacing="20.0" HBox.hgrow="NEVER">
+                                        <padding>
+                                            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                                        </padding>
+                                        <children>
+                                            <Button fx:id="btnProductos" contentDisplay="CENTER" onAction="#verPaneProductos" text="Productos">
+                                                <graphic>
+                                                    <ImageView fx:id="imgBtnProductos" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                </graphic>
+                                            </Button>
+                                            <Button fx:id="btnSesiones" contentDisplay="CENTER" onAction="#verPaneSesion" text="Sesiones">
+                                                <graphic>
+                                                    <ImageView fx:id="imgBtnSesiones" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                </graphic>
+                                            </Button>
+                                            <Button fx:id="btnUsuarios" contentDisplay="CENTER" onAction="#verPaneUsuarios" text="Usuarios">
+                                                <graphic>
+                                                    <ImageView fx:id="imgBtnUsuarios" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                </graphic>
+                                            </Button>
+                                            <Button fx:id="btnVentas" contentDisplay="CENTER" onAction="#verPaneVentas" text="Ventas">
+                                                <graphic>
+                                                    <ImageView fx:id="imgBtnVentas" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                </graphic>
+                                            </Button>
+                                            <Button fx:id="btnCodigoBarras" contentDisplay="CENTER" onAction="#verPaneCodigoBarras" text="Códigos de barras">
+                                                <graphic>
+                                                    <ImageView fitHeight="125.0" fitWidth="200.0" preserveRatio="true" />
+                                                </graphic>
+                                            </Button>
+                                        </children>
+                                    </VBox>
 
-                        <AnchorPane fx:id="paneSesiones">
-                          <children>
-                            <TableView fx:id="tablaSesiones" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                              <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                              </columnResizePolicy>
-                              <columns>
-                                <TableColumn fx:id="sColumnID" text="ID" />
-                                <TableColumn fx:id="sColumnUsuario" text="Ususario + ID" />
-                                <TableColumn fx:id="sColumnDispositivo" text="Dispositivo" />
-                                <TableColumn fx:id="sColumnFechaInicio" text="Fecha inicio" />
-                                <TableColumn fx:id="sColumnUltimaActividad" text="Ultima actividad" />
-                                <TableColumn fx:id="sColumnActiva" text="Activa" />
-                              </columns>
-                            </TableView>
-                          </children>
-                        </AnchorPane>
+                                    <VBox HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <StackPane VBox.vgrow="ALWAYS">
+                                                <children>
+                                                    <AnchorPane fx:id="paneProductos">
+                                                        <children>
+                                                            <TableView fx:id="tablaProductosAdmin" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
+                                                                <columns>
+                                                                    <TableColumn fx:id="pColumnID" text="ID" />
+                                                                    <TableColumn fx:id="pColumnCodigoBarras" text="Codigo de barras" />
+                                                                    <TableColumn fx:id="pColumnNombre" text="Nombre" />
+                                                                    <TableColumn fx:id="pColumnPrecio" text="Precio" />
+                                                                    <TableColumn fx:id="pColumnPrecioIva" text="Precio + IVA" />
+                                                                    <TableColumn fx:id="pColumnStock" text="Stock" />
+                                                                    <TableColumn fx:id="pColumnDescripcion" text="Descripción" />
+                                                                    <TableColumn fx:id="pColumnImagen" text="Imagen" />
+                                                                    <TableColumn fx:id="pColumnCategoria" text="Categoría" />
+                                                                    <TableColumn fx:id="pColumnFechaCreacion" text="Fecha creación" />
+                                                                    <TableColumn fx:id="pColumnFechaActualizacion" text="Fecha actualización" />
+                                                                </columns>
+                                                            </TableView>
+                                                        </children>
+                                                    </AnchorPane>
 
-                        <AnchorPane fx:id="paneUsuarios">
-                          <children>
-                            <TableView fx:id="tablaUsuarios" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                              <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                              </columnResizePolicy>
-                              <columns>
-                                <TableColumn fx:id="uColumnID" text="ID" />
-                                <TableColumn fx:id="uColumnCorreo" text="Correo" />
-                                <TableColumn fx:id="uColumnPermisos" text="Permisos" />
-                                <TableColumn fx:id="uColumnNombre" text="Nombre" />
-                                <TableColumn fx:id="uColumnApellidos" text="Apellidos" />
-                                <TableColumn fx:id="uColumnTelefono" text="Teléfono" />
-                                <TableColumn fx:id="uColumnDireccion" text="Dirección" />
-                                <TableColumn fx:id="uColumnFechaRegistro" text="Fecha de registro" />
-                              </columns>
-                            </TableView>
-                          </children>
-                        </AnchorPane>
+                                                    <AnchorPane fx:id="paneSesiones">
+                                                        <children>
+                                                            <TableView fx:id="tablaSesiones" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
+                                                                <columns>
+                                                                    <TableColumn fx:id="sColumnID" text="ID" />
+                                                                    <TableColumn fx:id="sColumnUsuario" text="Ususario + ID" />
+                                                                    <TableColumn fx:id="sColumnDispositivo" text="Dispositivo" />
+                                                                    <TableColumn fx:id="sColumnFechaInicio" text="Fecha inicio" />
+                                                                    <TableColumn fx:id="sColumnUltimaActividad" text="Ultima actividad" />
+                                                                    <TableColumn fx:id="sColumnActiva" text="Activa" />
+                                                                </columns>
+                                                            </TableView>
+                                                        </children>
+                                                    </AnchorPane>
 
-                        <AnchorPane fx:id="paneVentas">
-                          <children>
-                            <TableView fx:id="tablaVentas" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                              <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                              </columnResizePolicy>
-                              <columns>
-                                <TableColumn fx:id="vColumnID" text="ID" />
-                                <TableColumn fx:id="vColumnCliente" text="Cliente" />
-                                <TableColumn fx:id="vColumnEmpleado" text="Empleado" />
-                                <TableColumn fx:id="vColumnFecha" text="Fecha" />
-                                                <TableColumn fx:id="vColumnDescripcion" prefWidth="75.0" text="Descripción" />
-                                <TableColumn fx:id="vColumnTotal" text="Total" />
-                                <TableColumn fx:id="vColumnMetodoPago" text="Metodo de pago" />
-                                <TableColumn fx:id="vColumnTipoVenta" text="Tipo de venta" />
-                                <TableColumn fx:id="vColumnEstado" text="Estado" />
-                              </columns>
-                            </TableView>
-                          </children>
-                        </AnchorPane>
+                                                    <AnchorPane fx:id="paneUsuarios">
+                                                        <children>
+                                                            <TableView fx:id="tablaUsuarios" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
+                                                                <columns>
+                                                                    <TableColumn fx:id="uColumnID" text="ID" />
+                                                                    <TableColumn fx:id="uColumnCorreo" text="Correo" />
+                                                                    <TableColumn fx:id="uColumnPermisos" text="Permisos" />
+                                                                    <TableColumn fx:id="uColumnNombre" text="Nombre" />
+                                                                    <TableColumn fx:id="uColumnApellidos" text="Apellidos" />
+                                                                    <TableColumn fx:id="uColumnTelefono" text="Teléfono" />
+                                                                    <TableColumn fx:id="uColumnDireccion" text="Dirección" />
+                                                                    <TableColumn fx:id="uColumnFechaRegistro" text="Fecha de registro" />
+                                                                </columns>
+                                                            </TableView>
+                                                        </children>
+                                                    </AnchorPane>
 
-                        <AnchorPane fx:id="paneCodigoBarras">
-                          <children>
-                            <TableView fx:id="tablaCodigoBarras" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
-                              <columnResizePolicy>
-                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                              </columnResizePolicy>
-                              <columns>
-                                <TableColumn fx:id="cbColumnCodigo" text="Codigo" />
-                                <TableColumn fx:id="cbColumnProductoAsignado" text="Producto asignado" />
-                                <TableColumn fx:id="cbColumnFechaGeneracion" text="Fecha generación" />
-                                <TableColumn fx:id="cbColumnUsuarioGenerador" text="Usuario generador" />
-                              </columns>
-                            </TableView>
-                          </children>
-                        </AnchorPane>
-                      </children>
-                    </StackPane>
+                                                    <AnchorPane fx:id="paneVentas">
+                                                        <children>
+                                                            <TableView fx:id="tablaVentas" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
+                                                                <columns>
+                                                                    <TableColumn fx:id="vColumnID" text="ID" />
+                                                                    <TableColumn fx:id="vColumnCliente" text="Cliente" />
+                                                                    <TableColumn fx:id="vColumnEmpleado" text="Empleado" />
+                                                                    <TableColumn fx:id="vColumnFecha" text="Fecha" />
+                                                                    <TableColumn fx:id="vColumnDescripcion" prefWidth="75.0" text="Descripción" />
+                                                                    <TableColumn fx:id="vColumnTotal" text="Total" />
+                                                                    <TableColumn fx:id="vColumnMetodoPago" text="Metodo de pago" />
+                                                                    <TableColumn fx:id="vColumnTipoVenta" text="Tipo de venta" />
+                                                                    <TableColumn fx:id="vColumnEstado" text="Estado" />
+                                                                </columns>
+                                                            </TableView>
+                                                        </children>
+                                                    </AnchorPane>
 
-                    <HBox alignment="CENTER" spacing="50.0">
-                      <padding>
-                        <Insets bottom="10.0" top="10.0" />
-                      </padding>
-                      <children>
-                        <Button fx:id="btnInsertar" onAction="#insertarItem" text="Insertar" />
-                        <Button fx:id="btnActualizar" onAction="#actualizarItem" text="Actualizar" />
-                        <Button fx:id="btnEliminar" onAction="#eliminarItem" text="Eliminar" />
-                      </children>
-                    </HBox>
-                  </children>
-                </VBox>
-                        <VBox fx:id="vboxEditarItem" />
-              </children>
-            </HBox>
-          </children>
-        </AnchorPane>
-      </content>
-    </Tab>
-  </tabs>
-</TabPane>
+                                                    <AnchorPane fx:id="paneCodigoBarras">
+                                                        <children>
+                                                            <TableView fx:id="tablaCodigoBarras" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                                                                <columnResizePolicy>
+                                                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                                                </columnResizePolicy>
+                                                                <columns>
+                                                                    <TableColumn fx:id="cbColumnCodigo" text="Codigo" />
+                                                                    <TableColumn fx:id="cbColumnProductoAsignado" text="Producto asignado" />
+                                                                    <TableColumn fx:id="cbColumnFechaGeneracion" text="Fecha generación" />
+                                                                    <TableColumn fx:id="cbColumnUsuarioGenerador" text="Usuario generador" />
+                                                                </columns>
+                                                            </TableView>
+                                                        </children>
+                                                    </AnchorPane>
+                                                </children>
+                                            </StackPane>
+
+                                            <HBox alignment="CENTER" spacing="50.0">
+                                                <padding>
+                                                    <Insets bottom="10.0" top="10.0" />
+                                                </padding>
+                                                <children>
+                                                    <Button fx:id="btnInsertar" onAction="#insertarItem" text="Insertar" />
+                                                    <Button fx:id="btnActualizar" onAction="#actualizarItem" text="Actualizar" />
+                                                    <Button fx:id="btnEliminar" onAction="#eliminarItem" text="Eliminar" />
+                                                </children>
+                                            </HBox>
+                                        </children>
+                                    </VBox>
+                                    <VBox fx:id="vboxEditarItem" />
+                                </children>
+                            </HBox>
+                        </children>
+                    </AnchorPane>
+                </content>
+            </Tab>
+        </tabs>
+    </TabPane>
+</VBox>

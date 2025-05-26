@@ -51,6 +51,10 @@ dependencies {
     implementation 'com.google.zxing:core:3.5.2'
     implementation 'com.google.zxing:javase:3.5.2'
 
+    //GENERAR TICKET
+    implementation 'org.apache.pdfbox:pdfbox:2.0.27'
+    implementation 'org.apache.pdfbox:pdfbox-tools:2.0.27'
+
 }
 
 mainClassName = 'com.proyectobase.PlantillaFX'

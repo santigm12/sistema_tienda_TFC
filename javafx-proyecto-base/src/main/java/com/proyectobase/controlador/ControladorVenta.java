@@ -17,6 +17,7 @@ import com.proyectobase.modelo.Usuario;
 import com.proyectobase.modelo.UsuarioDAO;
 import com.proyectobase.modelo.Venta;
 import com.proyectobase.modelo.VentaDAO;
+import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -58,21 +59,29 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.print.PageRange;
+import javafx.print.PrinterJob;
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -92,12 +101,21 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javax.imageio.ImageIO;
 import javax.management.openmbean.SimpleType;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.printing.PDFPrintable;
+import org.apache.pdfbox.printing.Scaling;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.controlsfx.control.Notifications;
 
 
@@ -385,6 +403,54 @@ public class ControladorVenta implements Initializable {
     int identificadorTabla = 0;
     
     @FXML
+    private Button btnCerrarSesion;
+    
+    @FXML
+    private TabPane tabPanePrincipal;
+    
+    @FXML
+    private Tab tabVenta;
+    
+    /*@FXML
+    void accederTabVenta(ActionEvent event) {
+        //campoCodigoOculto.requestFocus();
+    }*/
+
+    @FXML
+    private void cerrarSesion(ActionEvent event) {
+        Alert alerta = new Alert(Alert.AlertType.CONFIRMATION);
+        alerta.setTitle("Confirmación");
+        alerta.setHeaderText("¿Está seguro de que desea cerrar sesión?");
+        alerta.setContentText("Se cerrará la sesión actual y volverá a la pantalla de login.");
+
+        Optional<ButtonType> resultado = alerta.showAndWait();
+        if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/proyectobase/vista/ventanaLogin.fxml"));
+                Parent root = loader.load();
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.setTitle("Login");
+                stage.setMaximized(true);
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    @FXML
+    private ImageView imgCabezera;
+    
+    @FXML
+    private Label lblCabezera;
+    
+    @FXML
+    private ImageView imgBotonSalir;
+
+    
+    @FXML
     void quitarProductoListaVenta(ActionEvent event) {
         for(int i = 0; i<lstProductosEscaneados.size(); i++){
             if(lstProductosEscaneados.get(i).getId() == tablaProductos.getSelectionModel().getSelectedItem().getId()){
@@ -408,40 +474,136 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     void finalizarCompra(ActionEvent event) {
-        try{
+        try {
+            // 1. Procesar la venta
             Venta venta = new Venta(
-                    0,
-                    1,
-                    1,
-                    LocalDate.now(),
-                    "Venta regular",
-                    actualizarLabelTotalVenta(),
-                    "EFECTIVO",
-                    "CONTADO",
-                    "COMPLETADA"
-
+                    0, 1, 2, LocalDate.now(), "Venta regular",
+                    actualizarLabelTotalVenta(), "EFECTIVO", "CONTADO", "COMPLETADA"
             );
-            ventaDAO.crearVentaConDetalles(venta, new ArrayList());
-            List<Venta> listaVentas = obtenerListaVentas();
-            int idVentaAñadirDetalles = 0;
-            for (int i = 0; i <listaVentas.size() ; i++) {
-                if(idVenta < listaVentas.get(i).getId()){
-                    idVentaAñadirDetalles = listaVentas.get(i).getId();
-                }
+            ventaDAO.crearVentaConDetalles(venta, new ArrayList<>());
+
+            // ... (resto de tu lógica para detalles de venta)
+
+            // 2. Generar el PDF temporal
+            String nombreArchivo = "ticket_venta_" + System.currentTimeMillis() + ".pdf";
+            generarTicketPDF(nombreArchivo, lstProductosEscaneados, actualizarLabelTotalVenta());
+
+            // 3. Mostrar diálogo de confirmación antes de abrir el PDF
+            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmacion.setTitle("Venta completada");
+            confirmacion.setHeaderText("¿Desea ver el ticket de venta?");
+            confirmacion.setContentText("Se abrirá en el visor de PDF predeterminado de su sistema.");
+
+            Optional<ButtonType> resultado = confirmacion.showAndWait();
+            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+                // 4. Abrir el PDF con el visor externo
+                
+                
             }
 
-            for (int i = 0; i <lstProductosEscaneados.size() ; i++) {
-                DetalleVenta dv = new DetalleVenta(0, idVentaAñadirDetalles, lstProductosEscaneados.get(i).getId(), 1, lstProductosEscaneados.get(i).getPrecio_con_iva(), lstProductosEscaneados.get(i).getPrecio_con_iva());
-                detalleVentaDAO.insertarDetalleVenta(dv);
-            }
+            abrirPDFConVisorExterno(nombreArchivo);
             tablaProductos.getItems().clear();
             actualizarLabelTotalVenta();
-            
-        }catch (Exception ex) {
-            System.out.println(ex);
+
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al generar el ticket: " + ex.getMessage()).show();
         }
-        
-        
+    }
+
+    private void abrirPDFConVisorExterno(String rutaPDF) {
+        try {
+            File file = new File(rutaPDF);
+            if (Desktop.isDesktopSupported()) {
+                Desktop desktop = Desktop.getDesktop();
+                if (file.exists()) {
+                    desktop.open(file);
+
+                    Alert imprimirAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    imprimirAlert.setTitle("Imprimir Ticket");
+                    imprimirAlert.setHeaderText("¿Desea imprimir el ticket ahora?");
+
+                    Optional<ButtonType> printResult = imprimirAlert.showAndWait();
+                    if (printResult.isPresent() && printResult.get() == ButtonType.OK) {
+                        imprimirPDF(rutaPDF);
+                    }
+                }
+            } else {
+                throw new Exception("No se puede abrir el PDF: Desktop no soportado en este sistema");
+            }
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(30000);
+                    file.delete();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "No se pudo abrir el PDF: " + e.getMessage()).show();
+        }
+    }
+
+    private void imprimirPDF(String rutaPDF) {
+        try {
+            // Cargar el PDF usando PDFBox
+            PDDocument document = PDDocument.load(new File(rutaPDF));
+
+            // Convertir la primera página a imagen
+            PDFRenderer renderer = new PDFRenderer(document);
+            BufferedImage bufferedImage = renderer.renderImageWithDPI(0, 300); // 300 DPI para buena calidad
+            Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+
+            // Configurar el trabajo de impresión
+            PrinterJob job = PrinterJob.createPrinterJob();
+            if (job != null && job.showPrintDialog(null)) {
+                // Crear un ImageView para imprimir
+                ImageView imageView = new ImageView(image);
+                imageView.setFitWidth(job.getJobSettings().getPageLayout().getPrintableWidth());
+                imageView.setPreserveRatio(true);
+
+                // Imprimir la imagen
+                if (job.printPage(imageView)) {
+                    job.endJob();
+                }
+            }
+            document.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error al imprimir: " + e.getMessage()).show();
+        }
+    }
+    
+    public void generarTicketPDF(String rutaArchivo, List<Producto> productos, double total) {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+
+            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+                content.beginText();
+                content.setFont(PDType1Font.COURIER, 12);
+                content.newLineAtOffset(50, 700);
+                content.showText("=== TICKET DE VENTA ===");
+                content.newLineAtOffset(0, -20);
+
+                for (Producto p : productos) {
+                    content.showText(p.getNombre() + " - $" + p.getPrecio());
+                    content.newLineAtOffset(0, -15);
+                }
+
+                content.newLineAtOffset(0, -20);
+                content.showText("Total: $" + total);
+                content.endText();
+            }
+
+            doc.save(rutaArchivo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -756,7 +918,7 @@ private boolean existeCorreoEnLista(String correo) {
                     Venta ventaNueva = new Venta(
                         lstVentas.size()+1,
                             1,
-                            1,
+                            2,
                             LocalDate.now(),
                             "",
                             0.0,
@@ -936,8 +1098,8 @@ private boolean existeCorreoEnLista(String correo) {
         Label labelFechaActualizacion = new Label("Fecha actualización");
 
         imagenActualizar = new ImageView();
-        imagenActualizar.setFitWidth(150);
-        imagenActualizar.setFitHeight(150);
+        imagenActualizar.setFitWidth(130);
+        imagenActualizar.setFitHeight(130);
         imagenActualizar.setStyle("-fx-cursor: hand;");
 
         imagenActualizar.setOnMouseClicked(e -> {
@@ -2448,12 +2610,25 @@ private boolean existeCorreoEnLista(String correo) {
     }
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        imgCabezera.setImage(new Image(getClass().getResourceAsStream("/no_image.png")));
+        imgBotonSalir.setImage(new Image(getClass().getResourceAsStream("/salir.png")));
         this.usuarioLogueado = SessionManager.getInstance().getUsuarioLogueado();
         if(!usuarioLogueado.getRol().equals("administrador")){
             tabAdmin.setDisable(true);
         }
         
         
+        tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener(
+            (observable, oldTab, newTab) -> {
+                if (newTab == tabVenta) {
+                    Platform.runLater(() -> campoCodigoOculto.requestFocus());
+                }
+            }
+        );
+        
+        if (tabPanePrincipal.getSelectionModel().getSelectedItem() == tabVenta) {
+            Platform.runLater(() -> campoCodigoOculto.requestFocus());
+        }
         
         vboxEditarItem.setVisible(false);
         

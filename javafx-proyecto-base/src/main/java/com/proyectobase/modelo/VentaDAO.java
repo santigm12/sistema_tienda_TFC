@@ -82,7 +82,7 @@ public class VentaDAO {
 
             Notifications.create()
                 .title("Éxito")
-                .text("Venta registrada con " + detalles.size() + " productos")
+                .text("Venta registrada")
                 .showInformation();
 
         } catch (SQLException ex) {
