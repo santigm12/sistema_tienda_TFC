@@ -69,7 +69,7 @@ class RegisterFragment : Fragment() {
                     val mediaType = "application/json; charset=utf-8".toMediaType()
                     val body = json.toString().toRequestBody(mediaType)
                     val request = Request.Builder()
-                        .url("http://52.206.9.18/sistema-tienda-api/api/usuarios/crear.php")
+                        .url("http://54.173.46.205/sistema-tienda-api/api/usuarios/crear.php")
                         .post(body)
                         .build()
                     client.newCall(request).execute().use { it.body?.string() }

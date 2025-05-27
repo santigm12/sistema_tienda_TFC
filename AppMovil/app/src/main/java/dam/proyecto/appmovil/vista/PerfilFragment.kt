@@ -61,7 +61,7 @@ class PerfilFragment : Fragment() {
 
             val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()
-                .url("http://10.0.2.2/sistema-tienda-api/api/usuarios/actualizar_usuario.php")
+                .url("http://54.173.46.205/sistema-tienda-api/api/usuarios/actualizar_usuario.php")
                 .put(body)  // Cambiar a PUT para coincidir con API
                 .build()
 

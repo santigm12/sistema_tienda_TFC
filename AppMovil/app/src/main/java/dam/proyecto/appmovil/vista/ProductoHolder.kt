@@ -17,7 +17,7 @@ class ProductoHolder(val binding:ItemProductoBinding)
         binding.txtPrecioProducto.text = p.precio_con_iva.toString()
         binding.txtDescripcionProducto.text = p.descripcion
 
-        // Decodificar imagen en base64 a Bitmap
+
         if (!p.imagenB64.isNullOrEmpty()) {
             try {
                 val imageBytes = Base64.decode(p.imagenB64, Base64.DEFAULT)
@@ -25,11 +25,9 @@ class ProductoHolder(val binding:ItemProductoBinding)
                 binding.imagenProducto.setImageBitmap(bitmap)
             } catch (e: Exception) {
                 e.printStackTrace()
-                // En caso de error, puedes poner una imagen por defecto
                 binding.imagenProducto.setImageResource(R.drawable.imagen_error)
             }
         } else {
-            // Imagen por defecto si no hay imagen
             binding.imagenProducto.setImageResource(R.drawable.imagen_por_defecto)
         }
     }

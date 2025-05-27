@@ -19,4 +19,9 @@
         android:id="@+id/pedidosFragment"
         android:title="Pedidos"
         android:icon="@drawable/pedidos" />
+
+    <item
+        android:id="@+id/cerrarSesion"
+        android:title="Cerrar sesión"
+        android:icon="@drawable/salir" />
 </menu>

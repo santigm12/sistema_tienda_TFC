@@ -1,5 +1,6 @@
 package dam.proyecto.appmovil.vista
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -15,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import dam.proyecto.appmovil.R
 import dam.proyecto.appmovil.databinding.FragmentLoginBinding
 import dam.proyecto.appmovil.modelo.UsuarioLogin
+import dam.proyecto.appmovil.modelo.navegarAErrorFragment
 import dam.proyecto.appmovil.viewModel.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +65,7 @@ class LoginFragment : Fragment() {
             Log.d("LoginDebug", "Password enviada: ${binding.txtPassword.text}")
 
             lifecycleScope.launch {
-                val usuario = login(email, password)
+                val usuario = login(email, password, requireContext())
                 if (usuario != null) {
                     usuarioViewModel.setUsuario(usuario)
                     val navigationController = findNavController()
@@ -75,6 +77,8 @@ class LoginFragment : Fragment() {
                             nombreUsuarioLogin = usuario.nombre,
                             apellidoUsuarioLogin = usuario.apellido
                         )
+                    binding.txtCorreo.text.clear()
+                    binding.txtPassword.text.clear()
                     navigationController.navigate(accion)
                 } else {
                     Toast.makeText(requireContext(), "El usuario o la contraseña son incorrectos", Toast.LENGTH_SHORT).show()
@@ -86,7 +90,7 @@ class LoginFragment : Fragment() {
 
     }
 
-    suspend fun login(correo: String, password: String): UsuarioLogin? {
+    suspend fun login(correo: String, password: String, context: Context): UsuarioLogin? {
         return withContext(Dispatchers.IO) {
             try {
                 val cliente = OkHttpClient()
@@ -96,7 +100,7 @@ class LoginFragment : Fragment() {
                 }
                 val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
                 val request = Request.Builder()
-                    .url("http://52.206.9.18/sistema-tienda-api/api/usuarios/autenticar.php")
+                    .url("http://54.173.46.205/sistema-tienda-api/api/usuarios/autenticar.php")
                     .post(body)
                     .build()
 
@@ -106,6 +110,7 @@ class LoginFragment : Fragment() {
                 Log.d("Login", "Respuesta: $respuestaTexto")
 
                 val jsonResponse = JSONObject(respuestaTexto ?: "")
+
                 if (jsonResponse.getBoolean("autenticado")) {
                     val usuario = jsonResponse.getJSONObject("usuario")
                     UsuarioLogin(
@@ -118,9 +123,17 @@ class LoginFragment : Fragment() {
                         direccion = usuario.getString("direccion"),
                         password = usuario.getString("password_hash")
                     )
-                } else null
+                } else {
+                    // Mostrar Toast en el hilo principal cuando las credenciales son incorrectas
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "El usuario o la contraseña no son correctos", Toast.LENGTH_LONG).show()
+                    }
+                    null
+                }
             } catch (e: Exception) {
-                Log.e("Login", "Error en login: ${e.message}")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_LONG).show()
+                }
                 null
             }
         }

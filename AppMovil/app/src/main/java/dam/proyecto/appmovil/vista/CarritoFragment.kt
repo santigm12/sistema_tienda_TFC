@@ -92,7 +92,7 @@ class CarritoFragment : Fragment() {
         val client = OkHttpClient()
 
         val request = Request.Builder()
-            .url("http://52.206.9.18/sistema-tienda-api/api/ventas/crear.php")
+            .url("http://54.173.46.205/sistema-tienda-api/api/ventas/crear.php")
             .post(RequestBody.create("application/json".toMediaType(), ventaJson))
             .build()
 
@@ -121,7 +121,7 @@ class CarritoFragment : Fragment() {
                     """.trimIndent()
 
                         val detalleRequest = Request.Builder()
-                            .url("http://52.206.9.18/sistema-tienda-api/api/detalle-venta/crear.php")
+                            .url("http://54.173.46.205/sistema-tienda-api/api/detalle-venta/crear.php")
                             .post(RequestBody.create("application/json".toMediaType(), detalleJson))
                             .build()
 

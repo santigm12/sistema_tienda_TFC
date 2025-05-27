@@ -117,6 +117,7 @@ import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.controlsfx.control.Notifications;
+import org.mindrot.jbcrypt.BCrypt;
 
 
 
@@ -656,23 +657,44 @@ public class ControladorVenta implements Initializable {
                     mostrarAlerta("Campos inválidos", "Por favor corrige los campos marcados antes de actualizar.");
                     return;
                 }
-                String query = "UPDATE usuarios SET correo=?, rol=?, nombre=?, apellido=?, telefono=?, direccion=? WHERE id=?";
-                        try {
-                            PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
-                            preparedStatement.setString(1, tfuCorreo.getText());
-                            preparedStatement.setString(2, tfuPermisos.getValue());
-                            preparedStatement.setString(3, tfuNombre.getText());
-                            preparedStatement.setString(4, tfuApellidos.getText());
-                            preparedStatement.setString(5, tfuTelefono.getText());
-                            preparedStatement.setString(6, tfuDireccion.getText());
-                            preparedStatement.setInt(7, Integer.parseInt(tfuId.getText()));
-                            preparedStatement.executeUpdate();
-                        } catch (SQLException ex) {
-                            System.out.println("Excepción: "+ex.getMessage());
-                        }catch (IllegalArgumentException e){
-                            System.out.println("El número introducido no es correcto");
-                        }tablaUsuarios.getItems().clear();
-                        tablaUsuarios.setItems(obtenerListaUsuarios());
+
+                // Verificar si se debe actualizar la contraseña
+                boolean actualizarPassword = checkEditarPassword.isSelected() && !tfuPassword.getText().isEmpty();
+
+                String query;
+                if (actualizarPassword) {
+                    query = "UPDATE usuarios SET correo=?, rol=?, nombre=?, apellido=?, telefono=?, direccion=?, password_hash=? WHERE id=?";
+                } else {
+                    query = "UPDATE usuarios SET correo=?, rol=?, nombre=?, apellido=?, telefono=?, direccion=? WHERE id=?";
+                }
+
+                try {
+                    PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
+                    preparedStatement.setString(1, tfuCorreo.getText());
+                    preparedStatement.setString(2, tfuPermisos.getValue());
+                    preparedStatement.setString(3, tfuNombre.getText());
+                    preparedStatement.setString(4, tfuApellidos.getText());
+                    preparedStatement.setString(5, tfuTelefono.getText());
+                    preparedStatement.setString(6, tfuDireccion.getText());
+
+                    if (actualizarPassword) {
+                        // Hashear la contraseña antes de guardarla (IMPORTANTE para seguridad)
+                        String hashedPassword = BCrypt.hashpw(tfuPassword.getText(), BCrypt.gensalt());
+                        preparedStatement.setString(7, hashedPassword);
+                        preparedStatement.setInt(8, Integer.parseInt(tfuId.getText()));
+                    } else {
+                        preparedStatement.setInt(7, Integer.parseInt(tfuId.getText()));
+                    }
+
+                    preparedStatement.executeUpdate();
+                } catch (SQLException ex) {
+                    System.out.println("Excepción: "+ex.getMessage());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("El número introducido no es correcto");
+                }
+
+                tablaUsuarios.getItems().clear();
+                tablaUsuarios.setItems(obtenerListaUsuarios());
             }
             
             case 4 -> {
@@ -1201,6 +1223,9 @@ private boolean existeCorreoEnLista(String correo) {
     private TextField tfuTelefono;
     private TextField tfuDireccion;
     private TextField tfuFechaRegistro;
+    private CheckBox checkEditarPassword;
+    private TextField tfuPassword;
+    
 
     // Tooltips como variables de clase para reutilización
     private final Tooltip tooltipCorreo = new Tooltip("Introduce un correo electrónico válido.");
@@ -1230,6 +1255,14 @@ private boolean existeCorreoEnLista(String correo) {
         tfuTelefono = new TextField();
         tfuDireccion = new TextField();
         tfuFechaRegistro = new TextField();
+        tfuPassword = new TextField();
+        tfuPassword.setPromptText("Nueva contraseña");
+        tfuPassword.setVisible(false);
+        
+        checkEditarPassword = new CheckBox("Editar contraseña");
+        checkEditarPassword.setOnAction(e -> {
+            tfuPassword.setVisible(checkEditarPassword.isSelected());
+        });
 
         tfuId.setEditable(false);
         tfuFechaRegistro.setEditable(false);
@@ -1248,7 +1281,9 @@ private boolean existeCorreoEnLista(String correo) {
             new Label("Apellidos:"), tfuApellidos,
             new Label("Teléfono:"), tfuTelefono,
             new Label("Dirección:"), tfuDireccion,
-            new Label("Fecha de registro:"), tfuFechaRegistro
+            new Label("Fecha de registro:"), tfuFechaRegistro,
+            checkEditarPassword,
+            tfuPassword
         );
 
         VBox.setMargin(titulo, new Insets(0, 0, 20, 0));
@@ -1285,6 +1320,31 @@ private boolean existeCorreoEnLista(String correo) {
         if (tfuApellidos != null) tfuApellidos.setOnKeyReleased(e -> validarCampoApellidos());
         if (tfuTelefono != null) tfuTelefono.setOnKeyReleased(e -> validarCampoTelefono());
         if (tfuDireccion != null) tfuDireccion.setOnKeyReleased(e -> validarCampoDireccion());
+        if (checkEditarPassword != null) {
+            checkEditarPassword.setOnAction(e -> {
+                boolean isSelected = checkEditarPassword.isSelected();
+                tfuPassword.setVisible(isSelected);
+                if (isSelected) validarCampoPassword();
+            });
+        }
+        if (tfuPassword != null) {
+            tfuPassword.setOnKeyReleased(e -> validarCampoPassword());
+        }
+    }
+    
+    private void validarCampoPassword() {
+        String password = tfuPassword.getText();
+
+        if (password.isEmpty()) {
+            tfuPassword.setStyle("-fx-border-color: red; -fx-border-width: 1px;");
+            tfuPassword.setTooltip(new Tooltip("La contraseña no puede estar vacía."));
+        } else if (password.length() < 8) {
+            tfuPassword.setStyle("-fx-border-color: orange; -fx-border-width: 1px;");
+            tfuPassword.setTooltip(new Tooltip("La contraseña debe tener al menos 8 caracteres."));
+        } else {
+            tfuPassword.setStyle("");
+            tfuPassword.setTooltip(null);
+        }
     }
 
     // Métodos de validación mejorados con verificación de nulidad

@@ -50,6 +50,18 @@
             app:argType="string" />
     </fragment>
 
+
+    <fragment
+        android:id="@+id/errorFragment"
+        android:name="dam.proyecto.appmovil.vista.ErrorFragment"
+        android:label="Error"
+        tools:layout="@layout/fragment_error">
+        <argument
+            android:name="mensajeError"
+            app:argType="string" />
+    </fragment>
+
+
     <fragment
         android:id="@+id/profileFragment"
         android:name="dam.proyecto.appmovil.vista.PerfilFragment"
