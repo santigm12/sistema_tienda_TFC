@@ -57,7 +57,7 @@ dependencies {
 
 }
 
-mainClassName = 'com.proyectobase.PlantillaFX'
+mainClassName = 'com.proyectobase.Main'
 
 jar {
  duplicatesStrategy 'exclude' //Excluye duplicados en ficheros de configuración
