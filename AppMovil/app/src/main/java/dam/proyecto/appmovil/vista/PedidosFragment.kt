@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import dam.proyecto.appmovil.databinding.FragmentPedidosBinding
@@ -18,7 +17,8 @@ import dam.proyecto.appmovil.viewModel.UserViewModel
 
 class PedidosFragment : Fragment() {
 
-    private lateinit var binding: FragmentPedidosBinding
+    private var _binding: FragmentPedidosBinding? = null
+    private val binding get() = _binding!!
     private val pedidosViewModel: PedidosFragmentViewModel by viewModels()
     private val usuarioViewModel: UserViewModel by activityViewModels()
     private lateinit var adapter: PedidoAdapter
@@ -28,7 +28,7 @@ class PedidosFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentPedidosBinding.inflate(inflater, container, false)
+        _binding = FragmentPedidosBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -36,68 +36,79 @@ class PedidosFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
-
-        usuarioViewModel.usuario.observe(viewLifecycleOwner) { usuario ->
-            if (usuario != null) {
-                Log.d("FRAGMENT_DEBUG", "Usuario obtenido: ${usuario.id}")
-                adapter = PedidoAdapter(mutableListOf(), mutableListOf(), mutableListOf(), usuario.id)
-                binding.lstPedidos.adapter = adapter
-                pedidosViewModel.cargarDatosCompletos(usuario.id)
-                setupObservers()
-            }
-        }
+        setupObservers()
+        loadData()
     }
 
     private fun setupRecyclerView() {
+        adapter = PedidoAdapter(mutableListOf(), mutableListOf(), mutableListOf(), usuarioViewModel.usuario.value?.id ?: 0)
         binding.lstPedidos.apply {
+            adapter = this@PedidosFragment.adapter
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(true)
             addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+            setHasFixedSize(true)
         }
     }
 
     private fun setupObservers() {
         pedidosViewModel.ventas.observe(viewLifecycleOwner) { ventas ->
-            ventas?.let {
-                adapter.actualizarDatos(
-                    ventas.toMutableList(),
-                    pedidosViewModel.detallesVenta.value?.toMutableList() ?: mutableListOf(),
-                    pedidosViewModel.productos.value?.toMutableList() ?: mutableListOf()
-                )
-                updateEmptyState()
-            }
-        }
-
-        pedidosViewModel.productos.observe(viewLifecycleOwner) { productos ->
-            productos?.let {
-                adapter.actualizarDatos(
-                    pedidosViewModel.ventas.value?.toMutableList() ?: mutableListOf(),
-                    pedidosViewModel.detallesVenta.value?.toMutableList() ?: mutableListOf(),
-                    productos.toMutableList()
-                )
+            Log.d("PedidosFragment", "Ventas recibidas: ${ventas?.size ?: 0}")
+            if (ventas.isNullOrEmpty()) {
+                showEmptyState(true, "No hay pedidos registrados")
+            } else {
+                showEmptyState(false)
+                actualizarAdapter()
             }
         }
 
         pedidosViewModel.detallesVenta.observe(viewLifecycleOwner) { detalles ->
-            detalles?.let {
-                adapter.actualizarDatos(
-                    pedidosViewModel.ventas.value?.toMutableList() ?: mutableListOf(),
-                    detalles.toMutableList(),
-                    pedidosViewModel.productos.value?.toMutableList() ?: mutableListOf()
-                )
-            }
+            Log.d("PedidosFragment", "Detalles recibidos: ${detalles?.size ?: 0}")
+            actualizarAdapter()
         }
 
-        pedidosViewModel.error.observe(viewLifecycleOwner) { errorMessage ->
-            errorMessage?.takeIf { it.isNotEmpty() }?.let {
+        pedidosViewModel.productos.observe(viewLifecycleOwner) { productos ->
+            Log.d("PedidosFragment", "Productos recibidos: ${productos?.size ?: 0}")
+            actualizarAdapter()
+        }
+
+        pedidosViewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                showEmptyState(true, it)
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun updateEmptyState() {
-        val isEmpty = adapter.itemCount == 0
-        binding.lstPedidos.visibility = if (isEmpty) View.GONE else View.VISIBLE
-        // Aquí puedes agregar la visibilidad de una vista de "lista vacía" si lo deseas
+    private fun loadData() {
+        usuarioViewModel.usuario.value?.let { cliente ->
+            Log.d("PedidosFragment", "Cargando datos para cliente: ${cliente.id}")
+            pedidosViewModel.cargarDatosCompletos(cliente.id)
+        } ?: run {
+            Log.e("PedidosFragment", "No se encontró ID de cliente")
+            showEmptyState(true, "No se pudo identificar al usuario")
+        }
+    }
+
+    private fun actualizarAdapter() {
+        val ventas = pedidosViewModel.ventas.value ?: return
+        val detalles = pedidosViewModel.detallesVenta.value ?: return
+        val productos = pedidosViewModel.productos.value ?: return
+
+        Log.d("PedidosFragment", "Actualizando adapter con: ${ventas.size} ventas, ${detalles.size} detalles, ${productos.size} productos")
+        adapter.actualizarDatos(ventas.toMutableList(), detalles.toMutableList(), productos.toMutableList())
+    }
+
+    private fun showEmptyState(show: Boolean, message: String = "") {
+        if (show) {
+            binding.lstPedidos.visibility = View.GONE
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        } else {
+            binding.lstPedidos.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

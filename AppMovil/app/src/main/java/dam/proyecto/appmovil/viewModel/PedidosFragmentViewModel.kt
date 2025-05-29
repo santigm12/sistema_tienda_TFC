@@ -13,6 +13,7 @@ import com.squareup.moshi.Moshi
 import dam.proyecto.appmovil.modelo.DetalleVenta
 import dam.proyecto.appmovil.modelo.Producto
 import dam.proyecto.appmovil.modelo.Venta
+import dam.proyecto.appmovil.modelo.WebSocketManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,10 +73,37 @@ class PedidosFragmentViewModel : ViewModel() {
     private val ventaApi = retrofit.create(VentaApi::class.java)
     private val detalleVentaApi = retrofit.create(DetalleVentaApi::class.java)
 
-    fun cargarProductos() {
+    private val webSocketManager = WebSocketManager("ws://54.173.46.205:3001") // URL corregida
+
+    private var usuarioId: Int? = null
+
+    init {
+        webSocketManager.connect()
+        webSocketManager.event.observeForever { mensaje ->
+            Log.d("WebSocket", "Mensaje recibido: $mensaje")
+            if (mensaje.contains("ventas_actualizadas")) {
+
+                usuarioId?.let {
+                    Log.d("WebSocket", "Actualizando ventas por notificación")
+                    cargarVentas(it)
+
+                }
+            }
+        }
+    }
+
+    fun cargarDatosCompletos(clienteId: Int) {
+        usuarioId = clienteId
+        cargarProductos()
+        cargarVentas(clienteId)
+    }
+
+    private fun cargarProductos() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _productos.postValue(productoApi.obtenerProductos())
+                val productos = productoApi.obtenerProductos()
+                Log.d("ViewModel", "Productos cargados: ${productos.size}")
+                _productos.postValue(productos)
             } catch (e: Exception) {
                 manejarError("Error al cargar productos", e)
             }
@@ -85,9 +113,9 @@ class PedidosFragmentViewModel : ViewModel() {
     fun cargarVentas(clienteId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                Log.d("API_DEBUG", "Solicitando ventas para cliente: $clienteId")
+                Log.d("ViewModel", "Cargando ventas para cliente: $clienteId")
                 val respuesta = ventaApi.obtenerVentasPorCliente(clienteId)
-                Log.d("API_DEBUG", "Respuesta recibida: ${respuesta.size} ventas")
+                Log.d("ViewModel", "Ventas recibidas: ${respuesta.size}")
 
                 withContext(Dispatchers.Main) {
                     _ventas.value = respuesta
@@ -102,6 +130,7 @@ class PedidosFragmentViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
+                Log.e("ViewModel", "Error al cargar ventas", e)
                 withContext(Dispatchers.Main) {
                     _error.value = "Error al cargar los pedidos: ${e.message}"
                 }
@@ -112,17 +141,13 @@ class PedidosFragmentViewModel : ViewModel() {
     private suspend fun cargarDetallesVenta(ventaId: Int) {
         try {
             val respuesta = detalleVentaApi.obtenerDetallesPorVenta(ventaId)
+            Log.d("ViewModel", "Detalles cargados para venta $ventaId: ${respuesta.size}")
             withContext(Dispatchers.Main) {
                 _detallesVenta.value = (_detallesVenta.value ?: emptyList()) + respuesta
             }
         } catch (e: Exception) {
-            Log.d("DetallesVenta", "No se encontraron detalles para la venta $ventaId")
+            Log.e("ViewModel", "Error al cargar detalles para venta $ventaId", e)
         }
-    }
-
-    fun cargarDatosCompletos(clienteId: Int) {
-        cargarProductos()
-        cargarVentas(clienteId)
     }
 
     fun cancelarPedido(ventaId: Int, clienteId: Int, contexto: Context) {
@@ -139,6 +164,7 @@ class PedidosFragmentViewModel : ViewModel() {
                                     apiResponse.message ?: "Pedido cancelado",
                                     Toast.LENGTH_SHORT
                                 ).show()
+                                cargarVentas(clienteId) // Recargar datos después de cancelar
                             } else {
                                 Toast.makeText(
                                     contexto,
@@ -170,6 +196,11 @@ class PedidosFragmentViewModel : ViewModel() {
 
     private fun manejarError(mensaje: String, e: Exception) {
         _error.postValue("$mensaje: ${e.localizedMessage}")
-        Log.e("PedidosError", mensaje, e)
+        Log.e("ViewModelError", mensaje, e)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        webSocketManager.disconnect()
     }
 }

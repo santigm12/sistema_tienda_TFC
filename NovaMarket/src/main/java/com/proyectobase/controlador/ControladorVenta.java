@@ -17,6 +17,7 @@ import com.proyectobase.modelo.Usuario;
 import com.proyectobase.modelo.UsuarioDAO;
 import com.proyectobase.modelo.Venta;
 import com.proyectobase.modelo.VentaDAO;
+import com.proyectobase.modelo.WSClient;
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -472,24 +474,37 @@ public class ControladorVenta implements Initializable {
         lblPrecio.setText(total+"€");
         return total;
     }
-    
+    ObservableList<DetalleVenta> lstDetalleVentaEscaneados = FXCollections.observableArrayList();
     @FXML
     void finalizarCompra(ActionEvent event) {
         try {
-            // 1. Procesar la venta
+        
             Venta venta = new Venta(
                     0, 1, 2, LocalDate.now(), "Venta regular",
                     actualizarLabelTotalVenta(), "EFECTIVO", "CONTADO", "COMPLETADA"
             );
-            ventaDAO.crearVentaConDetalles(venta, new ArrayList<>());
 
-            // ... (resto de tu lógica para detalles de venta)
 
-            // 2. Generar el PDF temporal
+            List<DetalleVenta> lstDetalleVentasEscaneados = new ArrayList<>();
+            for (Producto p : lstProductosEscaneados) {
+                int idProducto = p.getId();
+                int cantidad = 1;
+                double precioUnitario = p.getPrecio_con_iva();
+                double subtotal = cantidad * precioUnitario;
+
+                DetalleVenta detalle = new DetalleVenta(0, venta.getId(), idProducto, cantidad, precioUnitario, subtotal);
+                lstDetalleVentasEscaneados.add(detalle);
+
+            }
+
+            ventaDAO.crearVentaConDetalles(venta, lstDetalleVentasEscaneados);
+            obtenerListaDetalleVenta();
+            tablaVentas.getItems().clear();
+            tablaVentas.setItems(obtenerListaVentas());
             String nombreArchivo = "ticket_venta_" + System.currentTimeMillis() + ".pdf";
+
             generarTicketPDF(nombreArchivo, lstProductosEscaneados, actualizarLabelTotalVenta());
 
-            // 3. Mostrar diálogo de confirmación antes de abrir el PDF
             Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
             confirmacion.setTitle("Venta completada");
             confirmacion.setHeaderText("¿Desea ver el ticket de venta?");
@@ -497,15 +512,11 @@ public class ControladorVenta implements Initializable {
 
             Optional<ButtonType> resultado = confirmacion.showAndWait();
             if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-                // 4. Abrir el PDF con el visor externo
-                
-                
+                abrirPDFConVisorExterno(nombreArchivo);
             }
 
-            abrirPDFConVisorExterno(nombreArchivo);
             tablaProductos.getItems().clear();
             actualizarLabelTotalVenta();
-
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -551,23 +562,18 @@ public class ControladorVenta implements Initializable {
 
     private void imprimirPDF(String rutaPDF) {
         try {
-            // Cargar el PDF usando PDFBox
             PDDocument document = PDDocument.load(new File(rutaPDF));
 
-            // Convertir la primera página a imagen
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage bufferedImage = renderer.renderImageWithDPI(0, 300); // 300 DPI para buena calidad
             Image image = SwingFXUtils.toFXImage(bufferedImage, null);
 
-            // Configurar el trabajo de impresión
             PrinterJob job = PrinterJob.createPrinterJob();
             if (job != null && job.showPrintDialog(null)) {
-                // Crear un ImageView para imprimir
                 ImageView imageView = new ImageView(image);
                 imageView.setFitWidth(job.getJobSettings().getPageLayout().getPrintableWidth());
                 imageView.setPreserveRatio(true);
 
-                // Imprimir la imagen
                 if (job.printPage(imageView)) {
                     job.endJob();
                 }
@@ -592,12 +598,12 @@ public class ControladorVenta implements Initializable {
                 content.newLineAtOffset(0, -20);
 
                 for (Producto p : productos) {
-                    content.showText(p.getNombre() + " - $" + p.getPrecio());
+                    content.showText(p.getNombre() + " - " + p.getPrecio()+"€");
                     content.newLineAtOffset(0, -15);
                 }
 
                 content.newLineAtOffset(0, -20);
-                content.showText("Total: $" + total);
+                content.showText("Total: " + total+"€");
                 content.endText();
             }
 
@@ -658,7 +664,6 @@ public class ControladorVenta implements Initializable {
                     return;
                 }
 
-                // Verificar si se debe actualizar la contraseña
                 boolean actualizarPassword = checkEditarPassword.isSelected() && !tfuPassword.getText().isEmpty();
 
                 String query;
@@ -843,9 +848,7 @@ public class ControladorVenta implements Initializable {
     return correoBase + System.currentTimeMillis() + "@" + dominio;
 }
 
-/**
- * Normaliza texto quitando acentos y caracteres especiales
- */
+
 private String normalizarTexto(String texto) {
     if (texto == null || texto.isEmpty()) {
         return "";
@@ -855,9 +858,7 @@ private String normalizarTexto(String texto) {
             .replaceAll("[^a-zA-Z0-9]", "");
 }
 
-/**
- * Verifica si un correo ya existe en la lista de usuarios
- */
+
 private boolean existeCorreoEnLista(String correo) {
     return lstUsuarios.stream()
             .anyMatch(usuario -> usuario.getCorreo() != null && 
@@ -1227,7 +1228,6 @@ private boolean existeCorreoEnLista(String correo) {
     private TextField tfuPassword;
     
 
-    // Tooltips como variables de clase para reutilización
     private final Tooltip tooltipCorreo = new Tooltip("Introduce un correo electrónico válido.");
     private final Tooltip tooltipPermisos = new Tooltip("Los permisos deben ser 'admin' o 'user'.");
     private final Tooltip tooltipNombreUsuario = new Tooltip("El nombre no puede estar vacío.");
@@ -1267,7 +1267,7 @@ private boolean existeCorreoEnLista(String correo) {
         tfuId.setEditable(false);
         tfuFechaRegistro.setEditable(false);
 
-        // Configurar interfaz
+        
         Label titulo = new Label("Editar usuario:");
         titulo.setStyle("-fx-font-size: 20px;");
         tfuPermisos.getItems().addAll("administrador", "cliente", "empleado");
@@ -1291,9 +1291,9 @@ private boolean existeCorreoEnLista(String correo) {
         vboxEditarItem.setSpacing(10);
         vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
 
-        // Listener para selección de usuario
+       
         tablaUsuarios.getSelectionModel().selectedItemProperty().addListener((observable, oldUsuario, selectedUsuario) -> {
-            if (selectedUsuario != null && tfuId != null) { // Verificación de nulidad
+            if (selectedUsuario != null && tfuId != null) {
                 tfuId.setText(String.valueOf(selectedUsuario.getId()));
                 tfuCorreo.setText(String.valueOf(selectedUsuario.getCorreo()));
                 tfuPermisos.setValue(String.valueOf(selectedUsuario.getRol()));
@@ -1303,7 +1303,6 @@ private boolean existeCorreoEnLista(String correo) {
                 tfuDireccion.setText(selectedUsuario.getDireccion());
                 tfuFechaRegistro.setText(String.valueOf(selectedUsuario.getFecha_registro()));
 
-                // Validar campos
                 validarCampoCorreo();
                 validarCampoPermisos();
                 validarCampoNombreUsuario();
@@ -1313,7 +1312,6 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
 
-        // Listeners para validación en tiempo real
         if (tfuCorreo != null) tfuCorreo.setOnKeyReleased(e -> validarCampoCorreo());
         if (tfuPermisos != null) tfuPermisos.setOnAction(e -> validarCampoPermisos());
         if (tfuNombre != null) tfuNombre.setOnKeyReleased(e -> validarCampoNombreUsuario());
@@ -1347,7 +1345,6 @@ private boolean existeCorreoEnLista(String correo) {
         }
     }
 
-    // Métodos de validación mejorados con verificación de nulidad
     private boolean validarCampoCorreo() {
         if (tfuCorreo == null) return false;
 
@@ -1444,57 +1441,6 @@ private boolean existeCorreoEnLista(String correo) {
     }
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     private TextField tfvId;
     private ComboBox<String> cbCliente;
     private ComboBox<String> cbEmpleado;
@@ -1583,8 +1529,6 @@ private boolean existeCorreoEnLista(String correo) {
             vboxEditarItem.setPadding(new Insets(20, 20, 20, 20));
             vboxEditarItem.setSpacing(10);
             vboxEditarItem.setPrefWidth(Region.USE_COMPUTED_SIZE);
-
-            // Listener para selección de venta
         tablaVentas.getSelectionModel().selectedItemProperty().addListener((observable, oldVenta, selectedVenta) -> {
             if (selectedVenta != null) {
                 // Cargar datos primero
@@ -1629,7 +1573,6 @@ private boolean existeCorreoEnLista(String correo) {
                     }
                 }
 
-                    // Limpiar estilos de validación
                 cbCliente.setStyle(null);
                 cbEmpleado.setStyle(null);
                 dpFecha.setStyle(null);
@@ -1654,35 +1597,32 @@ private boolean existeCorreoEnLista(String correo) {
             }
         });
 
-        // Evento para añadir producto
         añadirProducto.setOnAction(evento -> {
             Producto producto = cbProductosDisponibles.getSelectionModel().getSelectedItem();
 
             if (producto != null) {
                 agregarProductoAVenta(producto);
                 actualizarTotalVenta();
-                validarCampoProductos(); // Validar después de añadir
+                validarCampoProductos();
             } else {
                 mostrarAlerta("Advertencia", "Seleccione un producto para añadir");
                 cbProductosDisponibles.setStyle("-fx-border-color: red;");
             }
         });
 
-        // Evento para eliminar producto
         eliminarProducto.setOnAction(evento -> {
             Producto producto = listViewProductosVenta.getSelectionModel().getSelectedItem();
 
             if (producto != null) {
                 eliminarProductoDeVenta(producto);
                 actualizarTotalVenta();
-                validarCampoProductos(); // Validar después de eliminar
+                validarCampoProductos();
             } else {
                 mostrarAlerta("Advertencia", "Seleccione un producto para eliminar");
                 listViewProductosVenta.setStyle("-fx-border-color: red;");
             }
         });
 
-        // Configurar validación cuando pierden el foco
         
             
             
@@ -1879,36 +1819,6 @@ private boolean existeCorreoEnLista(String correo) {
                    validarCampoProductos();
         }
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
-        
-
-    
 
     private void actualizarTotalVenta() {
         double total = 0.0;
@@ -2073,27 +1983,8 @@ private boolean existeCorreoEnLista(String correo) {
             alert.showAndWait();
         }
 
-        
     
-
-       /*private int obtenerIdCliente(String nombreCompleto) {
-           if (nombreCompleto == null || nombreCompleto.isEmpty()) {
-               return -1;
-           }
-
-           for (Usuario usuario : lstUsuarios) {
-               if ((usuario.getRol().equalsIgnoreCase("cliente")) && 
-                   (usuario.getNombre() + " " + usuario.getApellido()).equals(nombreCompleto)) {
-                   return usuario.getId();
-               }
-           }
-
-           System.err.println("Cliente no encontrado: " + nombreCompleto);
-           return -1; 
-       }*/
-
-    
-       private int obtenerIdEmpleado(String nombreCompleto) {
+        private int obtenerIdEmpleado(String nombreCompleto) {
            if (nombreCompleto == null || nombreCompleto.isEmpty()) {
                return -1;
            }
@@ -2139,7 +2030,6 @@ private boolean existeCorreoEnLista(String correo) {
 
         if (archivo != null) {
             try {
-                // Asegurar la extensión correcta
                 String nombreArchivo = archivo.getName().toLowerCase();
                 String formato;
 
@@ -2466,15 +2356,12 @@ private boolean existeCorreoEnLista(String correo) {
     
     public void inicializarTablasProductos() {
         try {
-            // Configurar columnas con PropertyValueFactory
             tc_id.setCellValueFactory(new PropertyValueFactory<>("id"));
             tc_nombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
             tc_precio.setCellValueFactory(new PropertyValueFactory<>("precio"));
 
-            // Configurar columna de precio con IVA (alternativa si no existe la propiedad)
             tc_precioIVA.setCellValueFactory(new PropertyValueFactory<>("precio_con_iva"));
 
-            // Configurar columna de imagen con renderizado personalizado
             tc_imagen.setCellValueFactory(cellData -> {
                 Producto producto = cellData.getValue();
                 ImageView imageView = new ImageView();
@@ -2497,7 +2384,6 @@ private boolean existeCorreoEnLista(String correo) {
                 return new SimpleObjectProperty<>(imageView);
             });
 
-            // Configurar la fábrica de celdas para la columna de imagen
             tc_imagen.setCellFactory(column -> new TableCell<Producto, ImageView>() {
                 private final ImageView imageView = new ImageView();
 
@@ -2516,7 +2402,6 @@ private boolean existeCorreoEnLista(String correo) {
                 }
             });
 
-            // Asignar los datos a la tabla
             tablaProductos.setItems(lstProductosEscaneados);
 
         } catch (Exception ex) {
@@ -2654,10 +2539,9 @@ private boolean existeCorreoEnLista(String correo) {
     private Usuario usuarioLogueado;
     double totalCompra = 0;
 
-    // Método para establecer el usuario
     public void setUsuarioLogueado(Usuario usuario) {
         this.usuarioLogueado = usuario;
-        configurarPermisos(); // Configurar permisos cuando se recibe el usuario
+        configurarPermisos(); 
     }
 
     private void configurarPermisos() {
@@ -2665,89 +2549,106 @@ private boolean existeCorreoEnLista(String correo) {
             tabAdmin.setDisable(!usuarioLogueado.getRol().equals("administrador"));
         } else {
             System.err.println("Usuario no disponible para configurar permisos");
-            // Opcional: cerrar la ventana o mostrar mensaje de error
         }
     }
+    
+    private WSClient clienteWebSocket;
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        imgCabezera.setImage(new Image(getClass().getResourceAsStream("/no_image.png")));
-        imgBotonSalir.setImage(new Image(getClass().getResourceAsStream("/salir.png")));
-        this.usuarioLogueado = SessionManager.getInstance().getUsuarioLogueado();
-        if(!usuarioLogueado.getRol().equals("administrador")){
-            tabAdmin.setDisable(true);
-        }
         
-        
-        tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener(
-            (observable, oldTab, newTab) -> {
-                if (newTab == tabVenta) {
-                    Platform.runLater(() -> campoCodigoOculto.requestFocus());
-                }
+            imgCabezera.setImage(new Image(getClass().getResourceAsStream("/logo_sin_letras.png")));
+            imgBotonSalir.setImage(new Image(getClass().getResourceAsStream("/salir.png")));
+            this.usuarioLogueado = SessionManager.getInstance().getUsuarioLogueado();
+            if(!usuarioLogueado.getRol().equals("administrador")){
+                tabAdmin.setDisable(true);
             }
-        );
-        
-        if (tabPanePrincipal.getSelectionModel().getSelectedItem() == tabVenta) {
-            Platform.runLater(() -> campoCodigoOculto.requestFocus());
-        }
-        
-        vboxEditarItem.setVisible(false);
-        
-        
-        try {
-            conexion = ConexionSingleton.obtenerConexion();
-            this.productoDAO = new ProductoDAO(conexion);
-            this.usuarioDAO = new UsuarioDAO(conexion);
-            this.ventaDAO = new VentaDAO(conexion);
-            this.detalleVentaDAO = new DetalleVentaDAO(conexion);
-            if (conexion != null) {
-                this.st = conexion.createStatement();
+            
+            
+            tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener(
+                    (observable, oldTab, newTab) -> {
+                        if (newTab == tabVenta) {
+                            Platform.runLater(() -> campoCodigoOculto.requestFocus());
+                        }
+                    }
+            );
+            
+            if (tabPanePrincipal.getSelectionModel().getSelectedItem() == tabVenta) {
+                Platform.runLater(() -> campoCodigoOculto.requestFocus());
+            }
+            
+            vboxEditarItem.setVisible(false);
+            
+            
+            try {
+                conexion = ConexionSingleton.obtenerConexion();
+                this.productoDAO = new ProductoDAO(conexion);
+                this.usuarioDAO = new UsuarioDAO(conexion);
+                this.ventaDAO = new VentaDAO(conexion);
+                this.detalleVentaDAO = new DetalleVentaDAO(conexion);
+                if (conexion != null) {
+                    this.st = conexion.createStatement();
+                }
+                
+                System.out.println("Se ha conectado a la base de datos");
+            } catch (SQLException e) {
+                System.out.println("No se ha conectado a la base de datos");
+            }
+            
+            btnDescargar = new Button("Descargar");
+            
+            btnDescargar.setOnAction(event -> descargarImagen());
+            
+            
+            obtenerListaProductos();
+            obtenerListaUsuarios();
+            obtenerListaVentas();
+            obtenerListaSesiones();
+            obtenerListaCodigoBarras();
+            obtenerListaDetalleVenta();
+            inicializarTablasProductos();
+            inicializarTablaUsuarios();
+            inicializarTablaVentas();
+            inicializarTablaSesiones();
+            inicializarTablasProductosAdmin();
+            inicializarTablaCodigosBarras();
+            
+            
+            configurarComponentesVenta();
+            
+            System.out.println(codigoProducto);
+            
+            // Cuando llega el mensaje desde WebSocket
+            try {
+                clienteWebSocket = new WSClient("ws://54.173.46.205:3001", mensaje -> {
+                    System.out.println("Mensaje recibido desde WebSocket: " + mensaje);
+                    if ("ventas_actualizadas".equals(mensaje)) {
+                        Platform.runLater(() -> {
+                            obtenerListaDetalleVenta();
+                            tablaVentas.setItems(obtenerListaVentas());
+                        });
+                    }
+                });
+
+                // 🔴 ¡Aquí conectas!
+                clienteWebSocket.connect();
+
+            } catch (Exception ex) {
+                System.out.println("Error en el websocket: " + ex.getMessage());
             }
 
-            System.out.println("Se ha conectado a la base de datos");
-        } catch (SQLException e) {
-            System.out.println("No se ha conectado a la base de datos");
-        }
         
-        btnDescargar = new Button("Descargar");
-        
-        btnDescargar.setOnAction(event -> descargarImagen());
-        
-        
-        obtenerListaProductos();
-        obtenerListaUsuarios();
-        obtenerListaVentas();
-        obtenerListaSesiones();
-        obtenerListaCodigoBarras();
-        obtenerListaDetalleVenta();
-        inicializarTablasProductos();
-        inicializarTablaUsuarios();
-        inicializarTablaVentas();
-        inicializarTablaSesiones();
-        inicializarTablasProductosAdmin();
-        inicializarTablaCodigosBarras();
-        
-        
-        configurarComponentesVenta();
-    
-        System.out.println(codigoProducto);
     }
+    
 
     private void configurarComponentesVenta() {
-        // Inicializar la lista de productos escaneados si es null
         if (lstProductosEscaneados == null) {
             lstProductosEscaneados = FXCollections.observableArrayList();
         }
-
-        // Configurar la tabla de productos
-        //configurarTablaProductosVenta();
-
-        // Configurar el campo de código oculto para el escáner
         configurarCampoCodigoBarras();
 
-        // Configurar el label de precio
         lblPrecio.setText("0.00");
 
-        // Opcional: Configurar imagen por defecto para el código de barras
         try {
             Image imagenCodigoBarras = new Image(getClass().getResourceAsStream("/images/barcode.png"));
             imagenCodigo.setImage(imagenCodigoBarras);
@@ -2764,7 +2665,6 @@ private boolean existeCorreoEnLista(String correo) {
         tc_precio.setCellValueFactory(new PropertyValueFactory<>("precio"));
         tc_precioIVA.setCellValueFactory(new PropertyValueFactory<>("precio_con_iva"));
 
-        // Configurar celda personalizada para la imagen
         tc_imagen.setCellFactory(column -> new TableCell<Producto, ImageView>() {
                 private final ImageView imageView = new ImageView();
 
@@ -2783,7 +2683,6 @@ private boolean existeCorreoEnLista(String correo) {
                 }
             });
 
-        // Configurar formato de precios
         tc_precio.setCellFactory(column -> new TableCell<Producto, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
@@ -2814,12 +2713,10 @@ private boolean existeCorreoEnLista(String correo) {
     private void configurarCampoCodigoBarras() {
         campoCodigoOculto.setFocusTraversable(false);
 
-        // Manejar el evento de entrada del escáner
         campoCodigoOculto.setOnAction(event -> {
             String codigo = campoCodigoOculto.getText().trim();
 
             if (!codigo.isEmpty()) {
-                // Buscar el producto usando Stream (más eficiente)
                 Optional<Producto> productoEncontrado = lstProductos.stream()
                     .filter(p -> p.getCodigo_barras().equals(codigo))
                     .findFirst();
@@ -2830,10 +2727,7 @@ private boolean existeCorreoEnLista(String correo) {
                     totalCompra += producto.getPrecio_con_iva();
                     lblPrecio.setText(totalCompra+"€");
 
-                    // Mostrar imagen del producto si está disponible
-                    /*if (producto.getImagen() != null) {
-                        imagenCodigo.setImage(producto.getImagen());
-                    }*/
+                   
                 } else {
                     mostrarAlertaProductoNoEncontrado(codigo);
                 }
@@ -2843,14 +2737,12 @@ private boolean existeCorreoEnLista(String correo) {
             Platform.runLater(() -> campoCodigoOculto.requestFocus());
         });
 
-        // Mantener siempre el foco en el campo
         campoCodigoOculto.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) {
                 Platform.runLater(() -> campoCodigoOculto.requestFocus());
             }
         });
 
-        // Establecer foco inicial
         Platform.runLater(() -> campoCodigoOculto.requestFocus());
     }
 
@@ -2861,4 +2753,7 @@ private boolean existeCorreoEnLista(String correo) {
         alert.setContentText("El código de barras " + codigo + " no corresponde a ningún producto");
         alert.showAndWait();
     }
+    
+    
+    
 }

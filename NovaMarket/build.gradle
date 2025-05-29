@@ -55,9 +55,12 @@ dependencies {
     implementation 'org.apache.pdfbox:pdfbox:2.0.27'
     implementation 'org.apache.pdfbox:pdfbox-tools:2.0.27'
 
+    //WEBSOCKET
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+
 }
 
-mainClassName = 'com.proyectobase.Main'
+mainClassName = 'com.proyectobase.vista.Main'
 
 jar {
  duplicatesStrategy 'exclude' //Excluye duplicados en ficheros de configuración

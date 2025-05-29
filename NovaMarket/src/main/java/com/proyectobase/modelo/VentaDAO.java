@@ -37,7 +37,6 @@ public class VentaDAO {
         boolean exito = false;
 
         try {
-            // Obtener conexión
             conn = ConexionSingleton.obtenerConexion();
             if (conn == null || conn.isClosed()) {
                 System.err.println("Conexión cerrada. Reconectando...");
@@ -48,12 +47,11 @@ public class VentaDAO {
                 }
             }
 
-            // Iniciar transacción
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); // Iniciar transacción
 
-            // 1. Insertar la venta principal
+            // Insertar venta
             String sqlVenta = "INSERT INTO ventas (cliente_id, empleado_id, fecha, total, metodo_pago, tipo_venta, estado, descripcion) " +
-                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             stmtVenta = conn.prepareStatement(sqlVenta, Statement.RETURN_GENERATED_KEYS);
 
             stmtVenta.setInt(1, venta.getCliente_id());
@@ -70,7 +68,6 @@ public class VentaDAO {
                 throw new SQLException("No se pudo crear la venta");
             }
 
-            // Obtener el ID de la venta creada
             generatedKeys = stmtVenta.getGeneratedKeys();
             if (!generatedKeys.next()) {
                 throw new SQLException("No se pudo obtener el ID de la venta creada");
@@ -78,18 +75,33 @@ public class VentaDAO {
             int ventaId = generatedKeys.getInt(1);
             venta.setId(ventaId);
 
-            
+            // Insertar los detalles de la venta
+            String sqlDetalle = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal) " +
+                                "VALUES (?, ?, ?, ?, ?)";
+            stmtDetalle = conn.prepareStatement(sqlDetalle);
+
+            for (DetalleVenta detalle : detalles) {
+                detalle.setVenta_id(ventaId); // establecer venta_id
+                stmtDetalle.setInt(1, detalle.getVenta_id());
+                stmtDetalle.setInt(2, detalle.getProducto_id());
+                stmtDetalle.setInt(3, detalle.getCantidad());
+                stmtDetalle.setDouble(4, detalle.getPrecio_unitario());
+                stmtDetalle.setDouble(5, detalle.getSubtotal());
+                stmtDetalle.addBatch();
+            }
+
+            stmtDetalle.executeBatch(); // ejecutar todos los inserts juntos
+            conn.commit(); // confirmar transacción
+            exito = true;
 
             Notifications.create()
                 .title("Éxito")
-                .text("Venta registrada")
+                .text("Venta registrada correctamente")
                 .showInformation();
 
         } catch (SQLException ex) {
             System.err.println("Error al crear venta: " + ex.getMessage());
             ex.printStackTrace();
-
-            // Rollback en caso de error
             if (conn != null) {
                 try {
                     conn.rollback();
@@ -97,14 +109,11 @@ public class VentaDAO {
                     System.err.println("Error al hacer rollback: " + e.getMessage());
                 }
             }
-
             Notifications.create()
                 .title("Error al registrar venta")
                 .text(ex.getMessage())
                 .showError();
-
         } finally {
-            // Restaurar auto-commit y cerrar recursos
             try {
                 if (conn != null) {
                     conn.setAutoCommit(true);
@@ -119,6 +128,7 @@ public class VentaDAO {
 
         return exito;
     }
+
 
     // Métodos auxiliares
     private boolean verificarStockDisponible(Connection conn, int productoId, int cantidadRequerida) throws SQLException {

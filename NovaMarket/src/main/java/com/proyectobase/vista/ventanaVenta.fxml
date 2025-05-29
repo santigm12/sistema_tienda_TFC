@@ -22,7 +22,7 @@
       <HBox alignment="CENTER_LEFT" spacing="10">
          <children>
             <ImageView fx:id="imgCabezera" fitHeight="68.0" fitWidth="68.0" pickOnBounds="true" preserveRatio="true" />
-            <Label fx:id="lblCabezera" text="Este es el titulo de la empresa">
+            <Label fx:id="lblCabezera" text="NovaMarket">
                <font>
                   <Font size="24.0" />
                </font>
