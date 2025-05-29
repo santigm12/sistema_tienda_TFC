@@ -1,6 +1,8 @@
 package dam.proyecto.appmovil.vista
 
 import android.os.Bundle
+import android.util.Log
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import dam.proyecto.appmovil.databinding.FragmentRegisterBinding
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import kotlinx.coroutines.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -47,22 +50,51 @@ class RegisterFragment : Fragment() {
         val password = binding.txtPasswordRegistrarse.text.toString().trim()
 
         if (nombre.isEmpty() || apellido.isEmpty() || telefono.isEmpty() ||
-            direccion.isEmpty() || correo.isEmpty() || password.isEmpty()) {
-            Toast.makeText(requireContext(), "Por favor, rellena todos los campos", Toast.LENGTH_LONG).show()
+            direccion.isEmpty() || correo.isEmpty() || password.isEmpty()
+        ) {
+            mostrarToastPersonalizado(requireContext(), "Por favor, rellena todos los campos", "error")
             return
         }
 
-        val json = JSONObject().apply {
-            put("correo", correo)
-            put("password", password)
-            put("rol", "cliente")
-            put("nombre", nombre)
-            put("apellido", apellido)
-            put("telefono", telefono)
-            put("direccion", direccion)
+        if (!telefono.matches(Regex("^\\d{9}\$"))) {
+            mostrarToastPersonalizado(requireContext(), "El teléfono debe contener exactamente 9 números", "error")
+            return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
+            val (correoValido, mensajeValidacion) = withContext(Dispatchers.IO) {
+                try {
+                    val client = OkHttpClient()
+                    val url = "http://54.173.46.205/sistema-tienda-api/api/usuarios/verificar_correo.php?correo=$correo"
+                    val request = Request.Builder().url(url).get().build()
+                    client.newCall(request).execute().use { response ->
+                        val json = JSONObject(response.body?.string() ?: "")
+                        val valido = json.getBoolean("valido")
+                        val mensaje = json.getString("mensaje")
+                        Pair(valido, mensaje)
+                    }
+                } catch (e: Exception) {
+                    Log.e("VerificarCorreo", "Error: ${e.message}")
+                    Pair(false, "Error al verificar el correo.")
+                }
+            }
+
+            if (!correoValido) {
+                mostrarToastPersonalizado(requireContext(), mensajeValidacion, "error")
+                return@launch
+            }
+
+            // Crear el usuario si el correo es válido
+            val json = JSONObject().apply {
+                put("correo", correo)
+                put("password", password)
+                put("rol", "cliente")
+                put("nombre", nombre)
+                put("apellido", apellido)
+                put("telefono", telefono)
+                put("direccion", direccion)
+            }
+
             try {
                 val resultado = withContext(Dispatchers.IO) {
                     val client = OkHttpClient()
@@ -76,17 +108,19 @@ class RegisterFragment : Fragment() {
                 }
 
                 if (isAdded) {
-                    Toast.makeText(requireContext(), "Cuenta creada correctamente", Toast.LENGTH_LONG).show()
+                    mostrarToastPersonalizado(requireContext(), "Cuenta creada correctamente", "ok")
                     limpiarCampos()
                     findNavController().popBackStack()
                 }
             } catch (e: Exception) {
                 if (isAdded) {
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    mostrarToastPersonalizado(requireContext(), "Error: ${e.message}", "error")
                 }
             }
         }
     }
+
+
 
     private fun limpiarCampos() {
         binding.txtNombre.text.clear()

@@ -16,7 +16,6 @@ import androidx.navigation.fragment.findNavController
 import dam.proyecto.appmovil.R
 import dam.proyecto.appmovil.databinding.FragmentLoginBinding
 import dam.proyecto.appmovil.modelo.UsuarioLogin
-import dam.proyecto.appmovil.modelo.navegarAErrorFragment
 import dam.proyecto.appmovil.viewModel.UserViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

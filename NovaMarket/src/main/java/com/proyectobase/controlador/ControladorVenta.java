@@ -2630,7 +2630,6 @@ private boolean existeCorreoEnLista(String correo) {
                     }
                 });
 
-                // 🔴 ¡Aquí conectas!
                 clienteWebSocket.connect();
 
             } catch (Exception ex) {
