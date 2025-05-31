@@ -11,6 +11,7 @@ import dam.proyecto.appmovil.databinding.FragmentCarritoBinding
 import dam.proyecto.appmovil.viewModel.CarritoViewModel
 import okhttp3.OkHttpClient
 import android.widget.Toast
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import dam.proyecto.appmovil.viewModel.UserViewModel
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -42,6 +43,7 @@ class CarritoFragment : Fragment() {
             emptyList(),
             onEliminarClick = { producto ->
                 carritoViewModel.eliminarProductoDelCarrito(producto)
+                mostrarToastPersonalizado(requireContext(), "Producto eliminado del carrito", "ok")
             }
         )
 
@@ -61,13 +63,13 @@ class CarritoFragment : Fragment() {
         val productos = carritoViewModel.productosEnCarrito.value ?: return
 
         if (productos.isEmpty()) {
-            Toast.makeText(requireContext(), "El carrito está vacío", Toast.LENGTH_SHORT).show()
+            mostrarToastPersonalizado(requireContext(), "El carrito está vacío", "error")
             return
         }
 
         val usuario = usuarioViewModel.usuario.value
         if (usuario == null) {
-            Toast.makeText(requireContext(), "Usuario no autenticado", Toast.LENGTH_SHORT).show()
+            mostrarToastPersonalizado(requireContext(), "Usuario no autenticado", "error")
             return
         }
 
@@ -99,7 +101,7 @@ class CarritoFragment : Fragment() {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "Error al crear venta", Toast.LENGTH_SHORT).show()
+                    mostrarToastPersonalizado(requireContext(), "Error al conectar con el servidor", "error")
                 }
             }
 
@@ -127,22 +129,28 @@ class CarritoFragment : Fragment() {
 
                         client.newCall(detalleRequest).enqueue(object : Callback {
                             override fun onFailure(call: Call, e: IOException) {
-
+                                requireActivity().runOnUiThread {
+                                    mostrarToastPersonalizado(requireContext(), "Error al guardar detalles", "error")
+                                }
                             }
 
                             override fun onResponse(call: Call, response: Response) {
-
+                                if (!response.isSuccessful) {
+                                    requireActivity().runOnUiThread {
+                                        mostrarToastPersonalizado(requireContext(), "Error en detalle de venta", "error")
+                                    }
+                                }
                             }
                         })
                     }
 
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "Pedido realizado correctamente", Toast.LENGTH_SHORT).show()
+                        mostrarToastPersonalizado(requireContext(), "Pedido realizado con éxito", "ok")
                         carritoViewModel.vaciarCarrito()
                     }
                 } else {
                     requireActivity().runOnUiThread {
-                        Toast.makeText(requireContext(), "Error al crear la venta", Toast.LENGTH_SHORT).show()
+                        mostrarToastPersonalizado(requireContext(), "Error al procesar la venta", "error")
                     }
                 }
             }

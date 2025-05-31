@@ -2,7 +2,6 @@ package dam.proyecto.appmovil.viewModel
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,6 +13,7 @@ import dam.proyecto.appmovil.modelo.DetalleVenta
 import dam.proyecto.appmovil.modelo.Producto
 import dam.proyecto.appmovil.modelo.Venta
 import dam.proyecto.appmovil.modelo.WebSocketManager
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -73,7 +73,7 @@ class PedidosFragmentViewModel : ViewModel() {
     private val ventaApi = retrofit.create(VentaApi::class.java)
     private val detalleVentaApi = retrofit.create(DetalleVentaApi::class.java)
 
-    private val webSocketManager = WebSocketManager("ws://54.173.46.205:3001") // URL corregida
+    private val webSocketManager = WebSocketManager("ws://54.173.46.205:3001")
 
     private var usuarioId: Int? = null
 
@@ -82,11 +82,9 @@ class PedidosFragmentViewModel : ViewModel() {
         webSocketManager.event.observeForever { mensaje ->
             Log.d("WebSocket", "Mensaje recibido: $mensaje")
             if (mensaje.contains("ventas_actualizadas")) {
-
                 usuarioId?.let {
                     Log.d("WebSocket", "Actualizando ventas por notificación")
                     cargarVentas(it)
-
                 }
             }
         }
@@ -132,7 +130,7 @@ class PedidosFragmentViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("ViewModel", "Error al cargar ventas", e)
                 withContext(Dispatchers.Main) {
-                    _error.value = "Error al cargar los pedidos: ${e.message}"
+                    _error.value = "No hay pedidos registrados"
                 }
             }
         }
@@ -159,36 +157,36 @@ class PedidosFragmentViewModel : ViewModel() {
                     if (response.isSuccessful) {
                         response.body()?.let { apiResponse ->
                             if (apiResponse.success) {
-                                Toast.makeText(
+                                mostrarToastPersonalizado(
                                     contexto,
-                                    apiResponse.message ?: "Pedido cancelado",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                cargarVentas(clienteId) // Recargar datos después de cancelar
+                                    apiResponse.message ?: "Pedido cancelado con éxito",
+                                    "ok"
+                                )
+                                cargarVentas(clienteId)
                             } else {
-                                Toast.makeText(
+                                mostrarToastPersonalizado(
                                     contexto,
                                     apiResponse.error ?: "Error al cancelar el pedido",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                                    "error"
+                                )
                             }
                         }
                     } else {
-                        val errorMsg = response.errorBody()?.string() ?: "Error sin mensaje"
-                        Toast.makeText(
+                        val errorMsg = response.errorBody()?.string() ?: "Error desconocido"
+                        mostrarToastPersonalizado(
                             contexto,
                             "Error ${response.code()}: $errorMsg",
-                            Toast.LENGTH_LONG
-                        ).show()
+                            "error"
+                        )
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
+                    mostrarToastPersonalizado(
                         contexto,
-                        "Error de conexión: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                        "Error de conexión: ${e.message ?: "Inténtelo más tarde"}",
+                        "error"
+                    )
                 }
             }
         }

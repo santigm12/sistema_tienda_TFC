@@ -6,7 +6,6 @@ import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -18,21 +17,21 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import org.mindrot.jbcrypt.BCrypt
 
 class RegisterFragment : Fragment() {
     private lateinit var binding: FragmentRegisterBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         inicializarBinding(inflater, container)
-        inicializarEventos();
+        inicializarEventos()
         return binding.root
     }
 
-    private fun inicializarBinding(inflater: LayoutInflater,container: ViewGroup?){
-        binding = FragmentRegisterBinding.inflate(inflater, container,false)
+    private fun inicializarBinding(inflater: LayoutInflater, container: ViewGroup?) {
+        binding = FragmentRegisterBinding.inflate(inflater, container, false)
     }
 
     private fun inicializarEventos() {
@@ -50,52 +49,60 @@ class RegisterFragment : Fragment() {
         val password = binding.txtPasswordRegistrarse.text.toString().trim()
 
         if (nombre.isEmpty() || apellido.isEmpty() || telefono.isEmpty() ||
-            direccion.isEmpty() || correo.isEmpty() || password.isEmpty()
-        ) {
-            mostrarToastPersonalizado(requireContext(), "Por favor, rellena todos los campos", "error")
+            direccion.isEmpty() || correo.isEmpty() || password.isEmpty()) {
+            mostrarToastPersonalizado(
+                requireContext(),
+                "Por favor, completa todos los campos",
+                "error"
+            )
             return
         }
 
         if (!telefono.matches(Regex("^\\d{9}\$"))) {
-            mostrarToastPersonalizado(requireContext(), "El teléfono debe contener exactamente 9 números", "error")
+            mostrarToastPersonalizado(
+                requireContext(),
+                "El teléfono debe tener exactamente 9 dígitos",
+                "error"
+            )
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
+            mostrarToastPersonalizado(
+                requireContext(),
+                "Por favor, introduce un correo electrónico válido",
+                "error"
+            )
+            return
+        }
+
+        if (password.length < 6) {
+            mostrarToastPersonalizado(
+                requireContext(),
+                "La contraseña debe tener al menos 6 caracteres",
+                "error"
+            )
             return
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val (correoValido, mensajeValidacion) = withContext(Dispatchers.IO) {
-                try {
-                    val client = OkHttpClient()
-                    val url = "http://54.173.46.205/sistema-tienda-api/api/usuarios/verificar_correo.php?correo=$correo"
-                    val request = Request.Builder().url(url).get().build()
-                    client.newCall(request).execute().use { response ->
-                        val json = JSONObject(response.body?.string() ?: "")
-                        val valido = json.getBoolean("valido")
-                        val mensaje = json.getString("mensaje")
-                        Pair(valido, mensaje)
-                    }
-                } catch (e: Exception) {
-                    Log.e("VerificarCorreo", "Error: ${e.message}")
-                    Pair(false, "Error al verificar el correo.")
-                }
-            }
-
-            if (!correoValido) {
-                mostrarToastPersonalizado(requireContext(), mensajeValidacion, "error")
-                return@launch
-            }
-
-            // Crear el usuario si el correo es válido
-            val json = JSONObject().apply {
-                put("correo", correo)
-                put("password", password)
-                put("rol", "cliente")
-                put("nombre", nombre)
-                put("apellido", apellido)
-                put("telefono", telefono)
-                put("direccion", direccion)
-            }
-
             try {
+                mostrarToastPersonalizado(
+                    requireContext(),
+                    "Registrando usuario...",
+                    "info"
+                )
+
+                val json = JSONObject().apply {
+                    put("correo", correo)
+                    put("password", password)
+                    put("rol", "cliente")
+                    put("nombre", nombre)
+                    put("apellido", apellido)
+                    put("telefono", telefono)
+                    put("direccion", direccion)
+                }
+
                 val resultado = withContext(Dispatchers.IO) {
                     val client = OkHttpClient()
                     val mediaType = "application/json; charset=utf-8".toMediaType()
@@ -104,23 +111,32 @@ class RegisterFragment : Fragment() {
                         .url("http://54.173.46.205/sistema-tienda-api/api/usuarios/crear.php")
                         .post(body)
                         .build()
-                    client.newCall(request).execute().use { it.body?.string() }
+                    client.newCall(request).execute().use {
+                        it.body?.string()
+                    }
                 }
 
                 if (isAdded) {
-                    mostrarToastPersonalizado(requireContext(), "Cuenta creada correctamente", "ok")
+                    mostrarToastPersonalizado(
+                        requireContext(),
+                        "¡Cuenta creada con éxito!",
+                        "ok"
+                    )
                     limpiarCampos()
                     findNavController().popBackStack()
                 }
             } catch (e: Exception) {
+                Log.e("RegisterFragment", "Error al registrar: ${e.message}")
                 if (isAdded) {
-                    mostrarToastPersonalizado(requireContext(), "Error: ${e.message}", "error")
+                    mostrarToastPersonalizado(
+                        requireContext(),
+                        "Error al registrar: ${e.message ?: "Inténtalo más tarde"}",
+                        "error"
+                    )
                 }
             }
         }
     }
-
-
 
     private fun limpiarCampos() {
         binding.txtNombre.text.clear()

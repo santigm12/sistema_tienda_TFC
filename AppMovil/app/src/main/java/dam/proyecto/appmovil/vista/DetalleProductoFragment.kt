@@ -13,6 +13,7 @@ import androidx.navigation.fragment.navArgs
 import dam.proyecto.appmovil.R
 import dam.proyecto.appmovil.databinding.FragmentDetalleProductoBinding
 import dam.proyecto.appmovil.modelo.Producto
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import dam.proyecto.appmovil.viewModel.CarritoViewModel
 
 class DetalleProductoFragment : Fragment() {
@@ -38,11 +39,11 @@ class DetalleProductoFragment : Fragment() {
 
         binding.btnAnadirCarrito.setOnClickListener {
             carritoViewModel.añadirProducto(producto)
-            Toast.makeText(
+            mostrarToastPersonalizado(
                 requireContext(),
                 "${producto.nombre} añadido al carrito",
-                Toast.LENGTH_SHORT
-            ).show()
+                "ok"
+            )
         }
     }
 
@@ -50,7 +51,6 @@ class DetalleProductoFragment : Fragment() {
         binding.tvNombreDetalle.text = producto.nombre
         binding.tvPrecioDetalle.text = "Precio: ${producto.precio_con_iva} €"
         binding.tvDescripcionDetalle.text = producto.descripcion
-
 
         if (!producto.imagenB64.isNullOrEmpty()) {
             try {
@@ -60,6 +60,11 @@ class DetalleProductoFragment : Fragment() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 binding.ivImagenDetalle.setImageResource(R.drawable.imagen_error)
+                mostrarToastPersonalizado(
+                    requireContext(),
+                    "Error al cargar la imagen del producto",
+                    "error"
+                )
             }
         } else {
             binding.ivImagenDetalle.setImageResource(R.drawable.imagen_por_defecto)

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -15,6 +14,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dam.proyecto.appmovil.R
 import dam.proyecto.appmovil.databinding.FragmentProductosBinding
 import dam.proyecto.appmovil.modelo.Producto
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import dam.proyecto.appmovil.viewModel.CarritoViewModel
 import dam.proyecto.appmovil.viewModel.ProductosFragmentViewModel
 
@@ -36,7 +36,6 @@ class ProductosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         adapter = ProductoAdapter(emptyList()) { productoSeleccionado ->
             val action = ProductosFragmentDirections.actionProductosFragmentToDetalleProductoFragment(productoSeleccionado)
             findNavController().navigate(action)
@@ -49,7 +48,11 @@ class ProductosFragment : Fragment() {
             if (productos.isNotEmpty()) {
                 adapter.setListaProductos(productos)
             } else {
-                Toast.makeText(requireContext(), "No hay productos disponibles", Toast.LENGTH_SHORT).show()
+                mostrarToastPersonalizado(
+                    requireContext(),
+                    "No hay productos disponibles",
+                    "error"
+                )
             }
         })
 
@@ -57,7 +60,6 @@ class ProductosFragment : Fragment() {
         btnCarrito.setOnClickListener {
             findNavController().navigate(R.id.action_productosFragment_to_carritoFragment)
         }
-
 
         viewModel.cargarProductos()
     }

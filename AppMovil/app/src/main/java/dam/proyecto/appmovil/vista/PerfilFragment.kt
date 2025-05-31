@@ -6,12 +6,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import dam.proyecto.appmovil.R
-import dam.proyecto.appmovil.databinding.FragmentPedidosBinding
 import dam.proyecto.appmovil.databinding.FragmentPerfilBinding
+import dam.proyecto.appmovil.modelo.mostrarToastPersonalizado
 import dam.proyecto.appmovil.viewModel.UserViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,7 +39,7 @@ class PerfilFragment : Fragment() {
         apellido: String,
         telefono: String,
         direccion: String,
-        correo: String,  // Añadir correo
+        correo: String,
         password: String?
     ): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -53,7 +51,7 @@ class PerfilFragment : Fragment() {
                 put("apellido", apellido)
                 put("telefono", telefono)
                 put("direccion", direccion)
-                put("correo", correo)  // Añadir correo
+                put("correo", correo)
                 if (!password.isNullOrBlank()) {
                     put("password", password)
                 }
@@ -62,7 +60,7 @@ class PerfilFragment : Fragment() {
             val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
             val request = Request.Builder()
                 .url("http://54.173.46.205/sistema-tienda-api/api/usuarios/actualizar_usuario.php")
-                .put(body)  // Cambiar a PUT para coincidir con API
+                .put(body)
                 .build()
 
             val response = cliente.newCall(request).execute()
@@ -94,7 +92,6 @@ class PerfilFragment : Fragment() {
             binding.etPassword.isEnabled = binding.chkEditarPassword.isChecked
             binding.etPassword.visibility = if (binding.chkEditarPassword.isChecked) View.VISIBLE else View.GONE
 
-            // Evento para el checkbox
             binding.chkEditarPassword.setOnCheckedChangeListener { _, isChecked ->
                 binding.etPassword.isEnabled = isChecked
                 binding.etPassword.visibility = if (isChecked) View.VISIBLE else View.GONE
@@ -109,7 +106,7 @@ class PerfilFragment : Fragment() {
                 val apellido = binding.etApellidos.text.toString()
                 val telefono = binding.etTelefono.text.toString()
                 val direccion = binding.etDireccion.text.toString()
-                val correo = binding.etCorreo.text.toString() // Obtener correo
+                val correo = binding.etCorreo.text.toString()
                 val password = if (binding.chkEditarPassword.isChecked) binding.etPassword.text.toString() else null
 
                 lifecycleScope.launch {
@@ -119,7 +116,7 @@ class PerfilFragment : Fragment() {
                         apellido = apellido,
                         telefono = telefono,
                         direccion = direccion,
-                        correo = correo, // Añadir correo
+                        correo = correo,
                         password = password
                     )
 
@@ -132,9 +129,17 @@ class PerfilFragment : Fragment() {
                                 direccion = direccion
                             )
                         )
-                        Toast.makeText(requireContext(), "Perfil actualizado", Toast.LENGTH_SHORT).show()
+                        mostrarToastPersonalizado(
+                            requireContext(),
+                            "Perfil actualizado correctamente",
+                            "ok"
+                        )
                     } else {
-                        Toast.makeText(requireContext(), "Error al actualizar perfil", Toast.LENGTH_SHORT).show()
+                        mostrarToastPersonalizado(
+                            requireContext(),
+                            "Error al actualizar el perfil",
+                            "error"
+                        )
                     }
                 }
             }
