@@ -98,6 +98,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -149,7 +150,8 @@ public class ControladorVenta implements Initializable {
     
     
     
-    
+    @FXML
+    private HBox bloqueAdministracion;
     
     @FXML
     private Button btnFinalizarCompra;
@@ -187,7 +189,8 @@ public class ControladorVenta implements Initializable {
     @FXML
     private ImageView imagenCodigo;
 
-    
+    @FXML
+    private HBox hboxCrud;
     
     @FXML
     private Button btnActualizar;
@@ -218,6 +221,9 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     private Button btnQuitarProducto;
+    
+    @FXML
+    private ImageView imgBtnCodigoBarras;
 
     @FXML
     private ImageView imgBtnProductos;
@@ -254,8 +260,8 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private TableColumn<Producto, String> pColumnCodigoBarras;
-
-    @FXML
+ 
+   @FXML
     private TableColumn<Producto, String> pColumnDescripcion;
 
     @FXML
@@ -400,6 +406,12 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private TableColumn<Sesion, Date> sColumnUltimaActividad;
+    
+    @FXML
+    private VBox vboxBotonesNavegacion;
+    
+    @FXML
+    private VBox vboxTablasAdmin;
 
     @FXML
     private TableColumn<Sesion, Integer> sColumnUsuario;
@@ -1088,6 +1100,7 @@ private boolean existeCorreoEnLista(String correo) {
         tfpPrecio = new TextField();
         tfpStock = new TextField();
         tfpDescripcion = new TextArea();
+        tfpDescripcion.setMaxWidth(300);
         tfpCategoria = new TextField();
         tfpid = new TextField();
         tfpcodigoBarras = new TextField();
@@ -2556,7 +2569,37 @@ private boolean existeCorreoEnLista(String correo) {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
+            
+            Platform.runLater(() -> {
+                tabPanePrincipal.applyCss();
+                tabPanePrincipal.layout();
+
+                Runnable adjustTabs = () -> {
+                    Node headerRegion = tabPanePrincipal.lookup(".headers-region");
+                    if (headerRegion != null) {
+                        double headerWidth = headerRegion.getLayoutBounds().getWidth();
+                        double paneWidth = tabPanePrincipal.getWidth();
+                        double offset = (paneWidth - headerWidth) / 2;
+                        headerRegion.setTranslateX(offset);
+                    }
+                };
+
+                tabPanePrincipal.widthProperty().addListener((obs, oldVal, newVal) -> {
+                    Platform.runLater(adjustTabs);
+                });
+
+                tabPanePrincipal.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                    Platform.runLater(adjustTabs);
+                });
+
+                adjustTabs.run();
+            });
+            imgBtnProductos.setImage(new Image(getClass().getResourceAsStream("/imgBotonProductos.png")));
+            imgBtnUsuarios.setImage(new Image(getClass().getResourceAsStream("/imgBotonUsuarios.png")));
+            imgBtnSesiones.setImage(new Image(getClass().getResourceAsStream("/imgBotonSesiones.png")));
+            imgBtnVentas.setImage(new Image(getClass().getResourceAsStream("/imgBotonVentas.png")));
+            imgBtnCodigoBarras.setImage(new Image(getClass().getResourceAsStream("/imgBotonCB.png")));
+            
             imgCabezera.setImage(new Image(getClass().getResourceAsStream("/logo_sin_letras.png")));
             imgBotonSalir.setImage(new Image(getClass().getResourceAsStream("/salir.png")));
             this.usuarioLogueado = SessionManager.getInstance().getUsuarioLogueado();
@@ -2607,11 +2650,12 @@ private boolean existeCorreoEnLista(String correo) {
             obtenerListaCodigoBarras();
             obtenerListaDetalleVenta();
             inicializarTablasProductos();
-            inicializarTablaUsuarios();
+            
             inicializarTablaVentas();
             inicializarTablaSesiones();
             inicializarTablasProductosAdmin();
             inicializarTablaCodigosBarras();
+            inicializarTablaUsuarios();
             
             
             configurarComponentesVenta();

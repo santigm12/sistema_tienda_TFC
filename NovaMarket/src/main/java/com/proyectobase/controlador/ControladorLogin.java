@@ -190,21 +190,28 @@ void iniciarSesion(ActionEvent event) {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/proyectobase/vista/ventanaVenta.fxml"));
             Parent root = loader.load();
 
-            // Obtener el controlador y configurar el usuario
             ControladorVenta controladorVenta = loader.getController();
             controladorVenta.setUsuarioLogueado(SessionManager.getInstance().getUsuarioLogueado());
 
             Stage stageActual = (Stage) btnIniciarSesion.getScene().getWindow();
             stageActual.close();
 
+            Scene scene = new Scene(root);
+
+            scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+
             Stage stage = new Stage();
             stage.setTitle("Venta");
-            stage.setScene(new Scene(root));
+            stage.setScene(scene);
             stage.setMaximized(true);
+
             stage.show();
 
         } catch (IOException e) {
             System.err.println("Error al cargar el archivo FXML: " + e.getMessage());
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            System.err.println("Error al cargar los recursos CSS: " + e.getMessage());
             e.printStackTrace();
         }
     }

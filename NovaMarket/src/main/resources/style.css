@@ -1,0 +1,263 @@
+/* Estilo general */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: #f5f7fa;
+}
+
+/* Encabezado superior */
+.hbox {
+    -fx-background-color: linear-gradient(to right, #2c3e50, #4a6491);
+    -fx-padding: 10;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.2, 0, 2);
+}
+
+#lblCabezera {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 2, 0.5, 1, 1);
+}
+
+/* Botón de cerrar sesión */
+#btnCerrarSesion {
+    -fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+    -fx-padding: 8 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1);
+    -fx-cursor: hand;
+}
+
+#btnCerrarSesion:hover {
+    -fx-background-color: linear-gradient(to bottom, #c0392b, #a5281b);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0, 0, 2);
+}
+
+#btnCerrarSesion:pressed {
+    -fx-background-color: #a5281b;
+    -fx-translate-y: 1px;
+}
+
+/* TabPane */
+.tab-pane {
+    -fx-tab-min-width: 120px;
+    -fx-tab-max-width: 200px;
+    -fx-background-color: #ecf0f1;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: #34495e;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: #34495e;
+}
+
+.tab {
+    -fx-background-insets: 0 1 0 0, 0;
+    -fx-background-radius: 5 5 0 0;
+    -fx-padding: 5 15;
+    -fx-background-color: #7f8c8d;
+    -fx-border-color: #34495e;
+    -fx-border-width: 1 1 0 1;
+}
+
+.tab:selected {
+    -fx-background-color: #ecf0f1;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1 1 0 1;
+}
+
+.tab-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.tab:selected .tab-label {
+    -fx-text-fill: #2c3e50;
+}
+
+/* Labels de precio */
+#lblPrecio {
+    -fx-text-fill: #27ae60;
+    -fx-font-weight: bold;
+    -fx-font-size: 42px;
+    -fx-effect: dropshadow(gaussian, rgba(46,204,113,0.3), 5, 0.3, 0, 1);
+}
+
+/* Botones generales */
+.button {
+    -fx-background-color: linear-gradient(to bottom, #3498db, #2980b9);
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+    -fx-padding: 8 15;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1);
+}
+
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2980b9, #2472a4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 2);
+}
+
+.button:pressed {
+    -fx-background-color: #2472a4;
+    -fx-translate-y: 1px;
+}
+
+/* Botones especiales */
+#btnFinalizarCompra {
+    -fx-background-color: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+#btnFinalizarCompra:hover {
+    -fx-background-color: linear-gradient(to bottom, #27ae60, #219955);
+}
+
+#btnQuitarProducto {
+    -fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);
+}
+
+#btnQuitarProducto:hover {
+    -fx-background-color: linear-gradient(to bottom, #c0392b, #a5281b);
+}
+
+/* Botones grandes con imagen */
+#btnProductos, #btnSesiones, #btnUsuarios, #btnVentas, #btnCodigoBarras {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-padding: 10;
+    -fx-background-radius: 5;
+}
+
+#btnProductos:hover, #btnSesiones:hover, #btnUsuarios:hover, #btnVentas:hover, #btnCodigoBarras:hover {
+    -fx-background-color: rgba(189, 195, 199, 0.2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);
+}
+
+/* Tablas */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-table-cell-border-color: #ecf0f1;
+    -fx-padding: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
+}
+
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);
+}
+
+.table-view .column-header,
+.table-view .filler {
+    -fx-size: 40px;
+    -fx-border-color: transparent transparent #bdc3c7 transparent;
+    -fx-background-insets: 0;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER;
+    -fx-padding: 0 0 5 0;
+}
+
+.table-row-cell {
+    -fx-cell-size: 40px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #f8f9fa;
+}
+
+.table-row-cell:even {
+    -fx-background-color: white;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+}
+
+/* VBox contenedor lateral */
+#vboxPrecio {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
+    -fx-background-radius: 5;
+}
+
+/* Imágenes */
+.image-view {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 1);
+}
+
+/* Botones CRUD */
+#btnInsertar {
+    -fx-background-color: linear-gradient(to bottom, #2ecc71, #27ae60);
+}
+
+#btnActualizar {
+    -fx-background-color: linear-gradient(to bottom, #f39c12, #e67e22);
+}
+
+#btnEliminar {
+    -fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);
+}
+
+/* Scrollbars */
+.scroll-bar:horizontal, .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar:horizontal .thumb,
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #bdc3c7;
+    -fx-background-radius: 5;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #95a5a6;
+}
+
+/* Campos ocultos */
+#campoCodigoOculto {
+    -fx-opacity: 0;
+    -fx-max-height: 0;
+}
+
+/* Efectos de hover para las celdas de la tabla */
+.table-row-cell:hover {
+    -fx-background-color: #e3f2fd;
+}
+
+/* Estilo para el panel de edición */
+#vboxEditarItem {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
+}

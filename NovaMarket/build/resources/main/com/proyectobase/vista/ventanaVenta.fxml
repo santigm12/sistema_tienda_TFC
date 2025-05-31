@@ -16,12 +16,12 @@
 <?import javafx.scene.text.Font?>
 
 <VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.proyectobase.controlador.ControladorVenta">
-   <HBox alignment="CENTER_LEFT" prefHeight="71.0" prefWidth="1133.0">
+   <HBox alignment="CENTER_LEFT" prefHeight="61.0" prefWidth="1133.0">
    <children>
       <!-- Contenido izquierdo (imagen y label) -->
       <HBox alignment="CENTER_LEFT" spacing="10">
          <children>
-            <ImageView fx:id="imgCabezera" fitHeight="68.0" fitWidth="68.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="imgCabezera" fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" />
             <Label fx:id="lblCabezera" text="NovaMarket">
                <font>
                   <Font size="24.0" />
@@ -31,12 +31,12 @@
       </HBox>
       
       <!-- Contenedor derecho expandible -->
-      <HBox alignment="CENTER_RIGHT" prefHeight="68.0" prefWidth="979.0" HBox.hgrow="ALWAYS">
+      <HBox alignment="CENTER_RIGHT" prefHeight="57.0" prefWidth="951.0" HBox.hgrow="ALWAYS">
          <children>
             <!-- Botón de cerrar sesión en la esquina derecha -->
-            <Button fx:id="btnCerrarSesion" alignment="CENTER" contentDisplay="TOP" onAction="#cerrarSesion" text="Cerrar Sesión">
+            <Button fx:id="btnCerrarSesion" alignment="CENTER" onAction="#cerrarSesion" prefHeight="15.0" text="Cerrar Sesión">
                   <graphic>
-                     <ImageView fx:id="imgBotonSalir" fitHeight="55.0" fitWidth="55.0" pickOnBounds="true" preserveRatio="true" />
+                     <ImageView fx:id="imgBotonSalir" fitHeight="40.0" fitWidth="42.0" pickOnBounds="true" preserveRatio="true" />
                   </graphic></Button>
          </children>
       </HBox>
@@ -47,7 +47,7 @@
 </HBox>
 
     
-    <!-- TabPane principal -->
+    <StackPane>
     <TabPane fx:id="tabPanePrincipal" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="30">
         <tabs>
             <Tab fx:id="tabVenta" closable="false" text="VENTA">
@@ -111,42 +111,42 @@
                 <content>
                     <AnchorPane>
                         <children>
-                            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                            <HBox fx:id="bloqueAdministracion" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
                                 <children>
-                                    <VBox alignment="CENTER" minWidth="200" prefHeight="1085.0" prefWidth="251.0" spacing="20.0" HBox.hgrow="NEVER">
+                                    <VBox fx:id="vboxBotonesNavegacion" alignment="CENTER" minWidth="200" prefHeight="1085.0" prefWidth="205.0" spacing="20.0" HBox.hgrow="NEVER">
                                         <padding>
                                             <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
                                         </padding>
                                         <children>
-                                            <Button fx:id="btnProductos" contentDisplay="CENTER" onAction="#verPaneProductos" text="Productos">
+                                            <Button fx:id="btnProductos" alignment="BOTTOM_CENTER" contentDisplay="TOP" minWidth="160.0" onAction="#verPaneProductos" text="Productos">
                                                 <graphic>
-                                                    <ImageView fx:id="imgBtnProductos" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                    <ImageView fx:id="imgBtnProductos" fitHeight="80.0" fitWidth="150.0" preserveRatio="true" />
                                                 </graphic>
                                             </Button>
-                                            <Button fx:id="btnSesiones" contentDisplay="CENTER" onAction="#verPaneSesion" text="Sesiones">
+                                            <Button fx:id="btnSesiones" contentDisplay="TOP" minWidth="160.0" onAction="#verPaneSesion" text="Sesiones">
                                                 <graphic>
-                                                    <ImageView fx:id="imgBtnSesiones" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                    <ImageView fx:id="imgBtnSesiones" fitHeight="80.0" fitWidth="150.0" preserveRatio="true" />
                                                 </graphic>
                                             </Button>
-                                            <Button fx:id="btnUsuarios" contentDisplay="CENTER" onAction="#verPaneUsuarios" text="Usuarios">
+                                            <Button fx:id="btnUsuarios" contentDisplay="TOP" minWidth="160.0" onAction="#verPaneUsuarios" text="Usuarios">
                                                 <graphic>
-                                                    <ImageView fx:id="imgBtnUsuarios" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                    <ImageView fx:id="imgBtnUsuarios" fitHeight="80.0" fitWidth="150.0" preserveRatio="true" />
                                                 </graphic>
                                             </Button>
-                                            <Button fx:id="btnVentas" contentDisplay="CENTER" onAction="#verPaneVentas" text="Ventas">
+                                            <Button fx:id="btnVentas" contentDisplay="TOP" minWidth="160.0" onAction="#verPaneVentas" text="Ventas">
                                                 <graphic>
-                                                    <ImageView fx:id="imgBtnVentas" fitHeight="150.0" fitWidth="200.0" preserveRatio="true" />
+                                                    <ImageView fx:id="imgBtnVentas" fitHeight="80.0" fitWidth="150.0" preserveRatio="true" />
                                                 </graphic>
                                             </Button>
-                                            <Button fx:id="btnCodigoBarras" contentDisplay="CENTER" onAction="#verPaneCodigoBarras" text="Códigos de barras">
+                                            <Button fx:id="btnCodigoBarras" contentDisplay="TOP" minWidth="160.0" onAction="#verPaneCodigoBarras" text="Códigos de barras">
                                                 <graphic>
-                                                    <ImageView fitHeight="125.0" fitWidth="200.0" preserveRatio="true" />
+                                                    <ImageView fx:id="imgBtnCodigoBarras" fitHeight="80.0" fitWidth="150.0" preserveRatio="true" />
                                                 </graphic>
                                             </Button>
                                         </children>
                                     </VBox>
 
-                                    <VBox HBox.hgrow="ALWAYS">
+                                    <VBox fx:id="vboxTablasAdmin" HBox.hgrow="ALWAYS">
                                         <children>
                                             <StackPane VBox.vgrow="ALWAYS">
                                                 <children>
@@ -250,7 +250,7 @@
                                                 </children>
                                             </StackPane>
 
-                                            <HBox alignment="CENTER" spacing="50.0">
+                                            <HBox fx:id="hboxCrud" alignment="CENTER" spacing="50.0">
                                                 <padding>
                                                     <Insets bottom="10.0" top="10.0" />
                                                 </padding>
@@ -271,4 +271,5 @@
             </Tab>
         </tabs>
     </TabPane>
+    </StackPane>
 </VBox>
