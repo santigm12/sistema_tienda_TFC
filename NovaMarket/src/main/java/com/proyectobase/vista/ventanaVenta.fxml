@@ -15,8 +15,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.proyectobase.controlador.ControladorVenta">
-   <HBox alignment="CENTER_LEFT" prefHeight="61.0" prefWidth="1133.0">
+<VBox fx:id="vboxPrincipal" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.proyectobase.controlador.ControladorVenta">
+   <HBox fx:id="hboxCabecera" alignment="CENTER_LEFT" prefHeight="61.0" prefWidth="1133.0">
    <children>
       <!-- Contenido izquierdo (imagen y label) -->
       <HBox alignment="CENTER_LEFT" spacing="10">
@@ -54,9 +54,9 @@
                 <content>
                     <AnchorPane>
                         <children>
-                            <HBox AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+                            <HBox fx:id="hboxPrincipalVentas" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
                                 <children>
-                                    <VBox fx:id="vboxPrecio" minWidth="250" prefWidth="250" HBox.hgrow="NEVER">
+                                    <VBox fx:id="vboxPrecio" maxHeight="-Infinity" minHeight="-Infinity" minWidth="250" prefWidth="250" HBox.hgrow="NEVER">
                                         <padding>
                                             <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
                                         </padding>
@@ -72,7 +72,6 @@
                                                     <Font size="36.0" />
                                                 </font>
                                             </Label>
-                                            <ImageView fx:id="imagenCodigo" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
                                         </children>
                                     </VBox>
                                     <VBox fx:id="vboxLista" HBox.hgrow="ALWAYS">

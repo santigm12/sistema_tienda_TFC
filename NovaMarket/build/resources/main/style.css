@@ -237,7 +237,7 @@
 .table-view .column-header-background {
     -fx-border-radius: 10 10 10 10;
     -fx-background-radius: 10 10 10 10;
-    -fx-border-color: 2px black;
+    -fx-border-color: transparent;
     /*-fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);*/
 }
 
@@ -289,11 +289,11 @@
 /* VBox contenedor lateral */
 #vboxPrecio {
     -fx-background-color: white;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
+    -fx-border-radius: 10;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
-    -fx-background-radius: 5;
+    -fx-background-radius: 10;
 }
 
 #vboxBotonesNavegacion {
@@ -301,8 +301,12 @@
 
 }
 
+#vboxLista {
+    -fx-padding: 0 0 0 20
+}
+
 /* Imágenes */
-.image-view {
+.image-view {F
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 1);
 }
 
@@ -371,4 +375,13 @@
 
 #hboxCrud{
     -fx-background-color: #ebe3c2;
+}
+
+#hboxCabecera{
+    -fx-background-color: #5e6670;
+}
+
+#hboxPrincipalVentas {
+    -fx-background-color: #ebe3c2;
+    -fx-padding: 20;
 }

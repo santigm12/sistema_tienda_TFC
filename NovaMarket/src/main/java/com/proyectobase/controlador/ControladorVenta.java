@@ -186,8 +186,6 @@ public class ControladorVenta implements Initializable {
     @FXML
     private TextField campoCodigoOculto;
     
-    @FXML
-    private ImageView imagenCodigo;
 
     @FXML
     private HBox hboxCrud;
@@ -236,6 +234,9 @@ public class ControladorVenta implements Initializable {
 
     @FXML
     private ImageView imgBtnVentas;
+    
+    @FXML
+    private VBox vboxPrincipal;
     
     @FXML
     private TableColumn<DetalleVenta, Integer> dvColumnCantidad;
@@ -303,7 +304,8 @@ public class ControladorVenta implements Initializable {
     @FXML
     private Pane paneVentas;
     
-
+    @FXML
+    private HBox hboxCabecera;
 
     @FXML
     private Tab tabAdmin;
@@ -425,6 +427,9 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     private Tab tabVenta;
+    
+    @FXML
+    private HBox hboxPrincipalVentas;
     
     /*@FXML
     void accederTabVenta(ActionEvent event) {
@@ -2569,7 +2574,8 @@ private boolean existeCorreoEnLista(String correo) {
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-            
+            vboxPrincipal.setMargin(hboxCabecera, new Insets(0, 0, 20, 0));
+
             Platform.runLater(() -> {
                 tabPanePrincipal.applyCss();
                 tabPanePrincipal.layout();
@@ -2694,7 +2700,6 @@ private boolean existeCorreoEnLista(String correo) {
 
         try {
             Image imagenCodigoBarras = new Image(getClass().getResourceAsStream("/images/barcode.png"));
-            imagenCodigo.setImage(imagenCodigoBarras);
         } catch (Exception e) {
             System.out.println("No se pudo cargar la imagen por defecto del código de barras");
         }

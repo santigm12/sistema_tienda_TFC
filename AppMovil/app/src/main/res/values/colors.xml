@@ -2,4 +2,7 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="nova_green">#176421</color>
+    <color name="market_orange">#CF3D23</color>
+    <color name="toolbar">#00AB61</color>
 </resources>

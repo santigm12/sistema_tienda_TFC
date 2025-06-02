@@ -5,14 +5,14 @@
     android:id="@+id/frameLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E6C0C0"
+    android:background="#FFFBE4"
     tools:context=".vista.RegisterFragment">
 
     <!-- TODO: Update blank fragment layout -->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="344dp"
-        android:layout_height="676dp"
-        android:background="#F8F8F8"
+        android:layout_width="344sp"
+        android:layout_height="676sp"
+        android:background="@drawable/rounded_border_layout"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -173,11 +173,12 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView12" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnCrearCuenta"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:background="@drawable/rounded_button"
             android:text="Crear cuenta"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

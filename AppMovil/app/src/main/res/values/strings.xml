@@ -2,4 +2,9 @@
     <string name="app_name">AppMovil</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="titulo_novamarket"><![CDATA[
+    <font color="#176421">Nova</font><font color="#CF3D23">Market</font>
+    ]]></string>
+
+
 </resources>

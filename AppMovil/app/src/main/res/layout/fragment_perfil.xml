@@ -5,7 +5,7 @@
     android:id="@+id/ConstraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E2D7D7"
+    android:background="#FFFBE4"
     tools:context=".vista.PerfilFragment">
 
 
@@ -153,12 +153,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chkEditarPassword" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnActualizarPerfil"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="20dp"
+        android:background="@drawable/rounded_button"
         android:text="Actualizar perfil"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

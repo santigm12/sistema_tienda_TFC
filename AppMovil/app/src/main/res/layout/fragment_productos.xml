@@ -5,13 +5,13 @@
     android:id="@+id/frameLayout2"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FFFBE4"
     tools:context=".vista.ProductosFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/lstProductos"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#E6C0C0"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
