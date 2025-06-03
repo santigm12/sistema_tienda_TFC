@@ -48,6 +48,9 @@
         <argument
             android:name="apellidoUsuarioLogin"
             app:argType="string" />
+        <action
+            android:id="@+id/action_homeFragment_to_productosFragment"
+            app:destination="@id/productosFragment" />
     </fragment>
 
 

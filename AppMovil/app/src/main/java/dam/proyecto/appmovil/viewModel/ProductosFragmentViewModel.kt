@@ -19,6 +19,8 @@ class ProductosFragmentViewModel : ViewModel() {
     private val _productos = MutableLiveData<List<Producto>>()
     val productos: LiveData<List<Producto>> get() = _productos
 
+    private val _cargando = MutableLiveData<Boolean>()
+    val cargando: LiveData<Boolean> get() = _cargando
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://54.173.46.205/sistema-tienda-api/api/")
@@ -35,20 +37,18 @@ class ProductosFragmentViewModel : ViewModel() {
 
 
     fun cargarProductos() {
+        _cargando.postValue(true)  // Comienza la carga
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val respuesta = productoApi.obtenerProductos()
-                if (respuesta.isEmpty()) {
-                    _productos.postValue(emptyList())
-                } else {
-                    _productos.postValue(respuesta)
-                }
+                _productos.postValue(respuesta)
             } catch (e: Exception) {
                 e.printStackTrace()
-
-                withContext(Dispatchers.Main) {
-                    Log.d("Error", "Error al cargar los productos")
-                }
+                Log.d("Error", "Error al cargar los productos: ${e.message}")
+                _productos.postValue(emptyList())
+            } finally {
+                _cargando.postValue(false)  // Finaliza la carga
             }
         }
     }

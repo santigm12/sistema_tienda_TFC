@@ -44,6 +44,11 @@ class ProductosFragment : Fragment() {
         binding.lstProductos.layoutManager = LinearLayoutManager(requireContext())
         binding.lstProductos.adapter = adapter
 
+        viewModel.cargando.observe(viewLifecycleOwner) { cargando ->
+            binding.progressBarProductos.visibility = if (cargando) View.VISIBLE else View.GONE
+        }
+
+
         viewModel.productos.observe(viewLifecycleOwner, Observer { productos ->
             if (productos.isNotEmpty()) {
                 adapter.setListaProductos(productos)

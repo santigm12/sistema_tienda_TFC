@@ -8,11 +8,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -32,25 +32,24 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge()
+        enableEdgeToEdge() // Añadir esto para mejor manejo de bordes
         setContentView(R.layout.activity_main)
 
+        // Configuración inicial
         setupViews()
-
         setupNavigation()
 
-        handleWindowInsets()
+
     }
 
     private fun setupViews() {
         drawerLayout = findViewById(R.id.navigation_drawer)
-        val navView = findViewById<NavigationView>(R.id.navigation_view)
         toolbar = findViewById(R.id.toolbar)
         appBarLayout = findViewById(R.id.appBarLayout)
 
+        // Configuración crítica del Toolbar
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowTitleEnabled(true)
     }
 
     private fun setupNavigation() {
@@ -59,93 +58,81 @@ class MainActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.homeFragment,
-                R.id.profileFragment,
-                R.id.productosFragment,
-                R.id.pedidosFragment
-            ),
+            setOf(R.id.homeFragment, R.id.profileFragment, R.id.productosFragment, R.id.pedidosFragment),
             drawerLayout
         )
 
         setupActionBarWithNavController(navController, appBarConfiguration)
-        findViewById<NavigationView>(R.id.navigation_view).setupWithNavController(navController)
 
-        val destinationListener = NavController.OnDestinationChangedListener { _, destination, _ ->
-            handleDestinationChange(destination.id)
-        }
+        val navView = findViewById<NavigationView>(R.id.navigation_view)
+        navView.setupWithNavController(navController)
 
-        navController.addOnDestinationChangedListener(destinationListener)
-
-        findViewById<NavigationView>(R.id.navigation_view).setNavigationItemSelectedListener { menuItem ->
+        // Mantenemos tu listener original para cerrar sesión
+        navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.cerrarSesion -> {
                     cerrarSesion()
                     true
                 }
                 else -> {
-                    navController.removeOnDestinationChangedListener(destinationListener)
                     val handled = androidx.navigation.ui.NavigationUI.onNavDestinationSelected(menuItem, navController)
                     if (handled) drawerLayout.closeDrawers()
-                    navController.addOnDestinationChangedListener(destinationListener)
                     handled
                 }
             }
         }
+
+        // Listener mejorado para el Toolbar
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            handleToolbarVisibility(destination.id)
+        }
     }
 
-    private fun handleDestinationChange(destinationId: Int) {
-        val isAuthScreen = destinationId == R.id.loginFragment || destinationId == R.id.registerFragment
-
-        appBarLayout.animate()
-            .alpha(if (isAuthScreen) 0f else 1f)
-            .setDuration(200)
-            .withEndAction {
-                appBarLayout.visibility = if (isAuthScreen) View.GONE else View.VISIBLE
+    private fun handleToolbarVisibility(destinationId: Int) {
+        when (destinationId) {
+            R.id.loginFragment, R.id.registerFragment -> {
+                // Pantallas sin Toolbar
+                supportActionBar?.hide()
+                appBarLayout.visibility = View.GONE
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             }
+            else -> {
+                // Pantallas con Toolbar
+                supportActionBar?.show()
+                appBarLayout.visibility = View.VISIBLE
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
 
-        if (isAuthScreen) {
-            supportActionBar?.hide()
-        } else {
-            supportActionBar?.show()
-            setupActionBarWithNavController(navController, appBarConfiguration) // Reconfigurar
-        }
-
-        drawerLayout.setDrawerLockMode(
-            if (isAuthScreen) DrawerLayout.LOCK_MODE_LOCKED_CLOSED
-            else DrawerLayout.LOCK_MODE_UNLOCKED
-        )
-
-        if (isAuthScreen && drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawers()
+                // Configuración adicional para el Toolbar
+                supportActionBar?.setDisplayHomeAsUpEnabled(true)
+                supportActionBar?.setHomeButtonEnabled(true)
+            }
         }
     }
 
-    private fun handleWindowInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.nav_host_fragment)) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(0, 0, 0, 0)
-            insets
-        }
-    }
+
+
 
     private fun cerrarSesion() {
-        AlertDialog.Builder(this).apply {
-            setTitle("Cerrar sesión")
-            setMessage("¿Estás seguro de que quieres cerrar sesión?")
-            setPositiveButton("Sí") { _, _ ->
-                val intent = Intent(this@MainActivity, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                startActivity(intent)
-                finish()
-            }
-            setNegativeButton("No", null)
-            create().show()
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Cerrar sesión")
+        builder.setMessage("¿Estás seguro de que quieres cerrar sesión?")
+        builder.setPositiveButton("Sí") { dialog, _ ->
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
+        builder.setNegativeButton("No") { dialog, _ -> dialog.dismiss() }
+        builder.create().show()
     }
+
+
+
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
+
+
+
 }

@@ -36,6 +36,10 @@ class PedidosFragmentViewModel : ViewModel() {
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> get() = _error
 
+    private val _cargando = MutableLiveData<Boolean>()
+    val cargando: LiveData<Boolean> get() = _cargando
+
+
     private val moshi = Moshi.Builder().build()
 
     private val retrofit = Retrofit.Builder()
@@ -92,9 +96,11 @@ class PedidosFragmentViewModel : ViewModel() {
 
     fun cargarDatosCompletos(clienteId: Int) {
         usuarioId = clienteId
+        _cargando.postValue(true)
         cargarProductos()
         cargarVentas(clienteId)
     }
+
 
     private fun cargarProductos() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -132,9 +138,14 @@ class PedidosFragmentViewModel : ViewModel() {
                 withContext(Dispatchers.Main) {
                     _error.value = "No hay pedidos registrados"
                 }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    _cargando.value = false
+                }
             }
         }
     }
+
 
     private suspend fun cargarDetallesVenta(ventaId: Int) {
         try {

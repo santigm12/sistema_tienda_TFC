@@ -43,6 +43,8 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.code.gson:gson:2.10.1")
+
     implementation ("androidx.navigation:navigation-fragment-ktx:2.8.5")
     implementation("com.squareup.moshi:moshi:1.15.1")
     implementation ("org.mindrot:jbcrypt:0.4")

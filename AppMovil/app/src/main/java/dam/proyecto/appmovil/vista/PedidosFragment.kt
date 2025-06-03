@@ -52,6 +52,7 @@ class PedidosFragment : Fragment() {
 
     private fun setupObservers() {
         pedidosViewModel.ventas.observe(viewLifecycleOwner) { ventas ->
+
             Log.d("PedidosFragment", "Ventas recibidas: ${ventas?.size ?: 0}")
             if (ventas.isNullOrEmpty()) {
                 showEmptyState(true, "No hay pedidos registrados")
@@ -59,6 +60,10 @@ class PedidosFragment : Fragment() {
                 showEmptyState(false)
                 actualizarAdapter()
             }
+        }
+
+        pedidosViewModel.cargando.observe(viewLifecycleOwner) { cargando ->
+            binding.progressBarPedidos.visibility = if (cargando) View.VISIBLE else View.GONE
         }
 
         pedidosViewModel.detallesVenta.observe(viewLifecycleOwner) { detalles ->

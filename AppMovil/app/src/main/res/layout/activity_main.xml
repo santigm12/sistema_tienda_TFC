@@ -5,48 +5,41 @@
     android:id="@+id/navigation_drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false">
+    android:fitsSystemWindows="true">
 
-    <!-- Contenido principal -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:orientation="vertical">
 
-        <!-- AppBarLayout con Toolbar -->
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+            android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="#00AB61"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+                android:background="@color/toolbar"
+                app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
         </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- NavHostFragment debajo del Toolbar -->
         <fragment
             android:id="@+id/nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:defaultNavHost="true"
-            app:navGraph="@navigation/nav_graph"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            />
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+            app:navGraph="@navigation/nav_graph" />
+    </LinearLayout>
 
-    <!-- Menú lateral -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigation_view"
-        android:layout_width="230dp"
+        android:layout_width="190sp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:menu="@menu/menu_navigation_drawer"
-        app:headerLayout="@layout/cabecera_navigation_drawer" />
-
+        app:headerLayout="@layout/cabecera_navigation_drawer"
+        app:menu="@menu/menu_navigation_drawer" />
 </androidx.drawerlayout.widget.DrawerLayout>

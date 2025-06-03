@@ -14,7 +14,7 @@ class ProductoHolder(val binding:ItemProductoBinding)
     fun mostrarProducto(p: Producto) {
         producto = p
         binding.txtNombreProducto.text = p.nombre
-        binding.txtPrecioProducto.text = p.precio_con_iva.toString()
+        binding.txtPrecioProducto.text = p.precio_con_iva.toString()+"€"
         binding.txtDescripcionProducto.text = p.descripcion
 
 
