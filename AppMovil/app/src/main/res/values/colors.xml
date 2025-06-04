@@ -2,7 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="nova_green">#176421</color>
-    <color name="market_orange">#CF3D23</color>
-    <color name="toolbar">#00AB61</color>
+    <color name="nova_green">#007A3D</color>
+    <color name="market_orange">#D9531E</color>
+    <color name="toolbar">#00B06D</color>
+    <color name="light_background">#FFFFFF</color> <!-- Fondo claro -->
+    <color name="lighter_stroke">#DDDDDD</color> <!-- Borde suave claro -->
+    <color name="brand_blue">#3B6EF7</color>
+    <color name="hint_text">#999999</color> <!-- Gris claro para hints -->
+    <color name="error_red">#D32F2F</color>
 </resources>

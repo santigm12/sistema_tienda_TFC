@@ -32,6 +32,7 @@
 
     <EditText
         android:id="@+id/etNombre"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -54,6 +55,7 @@
 
     <EditText
         android:id="@+id/etApellidos"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -76,6 +78,7 @@
 
     <EditText
         android:id="@+id/etTelefono"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -98,6 +101,7 @@
 
     <EditText
         android:id="@+id/etDireccion"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -120,6 +124,7 @@
 
     <EditText
         android:id="@+id/etCorreo"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -143,6 +148,7 @@
 
     <EditText
         android:id="@+id/etPassword"
+        style="@style/MessagingEditTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
