@@ -1,4 +1,6 @@
-package com.proyectobase.vista; //Modificar al package correcto
+package com.proyectobase.vista;
+
+ //Modificar al package correcto
 
 import javafx.application.Application;
 import static javafx.application.Application.launch;
@@ -19,7 +21,9 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/com/proyectobase/vista/ventanaLogin.fxml"));
         Scene scene = new Scene(root);
         stage.setScene(scene);
-        stage.setTitle("Gestión ventas Hnos. Gallardo");
+        stage.setTitle("NovaMarket");
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logoApp.png")));
         stage.setMaximized(true);
         stage.show();
     }

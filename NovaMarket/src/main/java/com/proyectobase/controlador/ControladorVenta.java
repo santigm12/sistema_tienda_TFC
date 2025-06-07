@@ -54,6 +54,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -79,6 +80,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -329,10 +331,10 @@ public class ControladorVenta implements Initializable {
     private VBox vboxEditarItem;
 
     @FXML
-    private TableColumn<Venta, Integer> vColumnCliente;
+    private TableColumn<Venta, String> vColumnCliente;
 
     @FXML
-    private TableColumn<Venta, Integer> vColumnEmpleado;
+    private TableColumn<Venta, String> vColumnEmpleado;
 
     @FXML
     private TableColumn<Venta, String> vColumnEstado;
@@ -365,10 +367,10 @@ public class ControladorVenta implements Initializable {
     private TableColumn<CodigoBarras, Date> cbColumnFechaGeneracion;
 
     @FXML
-    private TableColumn<CodigoBarras, Integer> cbColumnProductoAsignado;
+    private TableColumn<CodigoBarras, String> cbColumnProductoAsignado;
     
     @FXML
-    private TableColumn<CodigoBarras, Integer> cbColumnUsuarioGenerador;
+    private TableColumn<CodigoBarras, String> cbColumnUsuarioGenerador;
     
     @FXML
     private TableColumn<Usuario, String> uColumnApellidos;
@@ -416,7 +418,8 @@ public class ControladorVenta implements Initializable {
     private VBox vboxTablasAdmin;
 
     @FXML
-    private TableColumn<Sesion, Integer> sColumnUsuario;
+    private TableColumn<Sesion, String> sColumnUsuario;
+    
     int identificadorTabla = 0;
     
     @FXML
@@ -442,15 +445,23 @@ public class ControladorVenta implements Initializable {
         alerta.setTitle("Confirmación");
         alerta.setHeaderText("¿Está seguro de que desea cerrar sesión?");
         alerta.setContentText("Se cerrará la sesión actual y volverá a la pantalla de login.");
+        
+        DialogPane dialogPane = alerta.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        dialogPane.getStyleClass().add("mi-alerta");
 
         Optional<ButtonType> resultado = alerta.showAndWait();
         if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/proyectobase/vista/ventanaLogin.fxml"));
                 Parent root = loader.load();
-
+                
+                
+                
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
+                Scene scene = stage.getScene();
+                scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
                 stage.setTitle("Login");
                 stage.setMaximized(true);
                 stage.show();
@@ -472,13 +483,25 @@ public class ControladorVenta implements Initializable {
     
     @FXML
     void quitarProductoListaVenta(ActionEvent event) {
-        for(int i = 0; i<lstProductosEscaneados.size(); i++){
-            if(lstProductosEscaneados.get(i).getId() == tablaProductos.getSelectionModel().getSelectedItem().getId()){
-                lstProductosEscaneados.remove(i);
-                break;
+        if(tablaProductos.getSelectionModel().getSelectedItem() != null){
+            for(int i = 0; i<lstProductosEscaneados.size(); i++){
+                if(lstProductosEscaneados.get(i).getId() == tablaProductos.getSelectionModel().getSelectedItem().getId()){
+                    lstProductosEscaneados.remove(i);
+                    break;
+                }
             }
+            actualizarLabelTotalVenta();
+        }else{
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Error al eliminar el producto");
+                alert.setHeaderText(null);
+                alert.setContentText("Debe seleccionar un producto de la venta para poder quitarlo");
+                DialogPane dialogPane = alert.getDialogPane();
+                dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                dialogPane.getStyleClass().add("mi-alerta");
+                alert.showAndWait();
         }
-        actualizarLabelTotalVenta();
+        
     }
     
     public double actualizarLabelTotalVenta(){
@@ -494,50 +517,54 @@ public class ControladorVenta implements Initializable {
     ObservableList<DetalleVenta> lstDetalleVentaEscaneados = FXCollections.observableArrayList();
     @FXML
     void finalizarCompra(ActionEvent event) {
-        try {
-        
-            Venta venta = new Venta(
-                    0, 1, 2, LocalDate.now(), "Venta regular",
-                    actualizarLabelTotalVenta(), "EFECTIVO", "CONTADO", "COMPLETADA"
-            );
+        if(!lstProductosEscaneados.isEmpty()){
+            try {
+
+                Venta venta = new Venta(
+                        0, 1, 2, LocalDate.now(), "Venta regular",
+                        actualizarLabelTotalVenta(), "EFECTIVO", "CONTADO", "COMPLETADA"
+                );
 
 
-            List<DetalleVenta> lstDetalleVentasEscaneados = new ArrayList<>();
-            for (Producto p : lstProductosEscaneados) {
-                int idProducto = p.getId();
-                int cantidad = 1;
-                double precioUnitario = p.getPrecio_con_iva();
-                double subtotal = cantidad * precioUnitario;
+                List<DetalleVenta> lstDetalleVentasEscaneados = new ArrayList<>();
+                for (Producto p : lstProductosEscaneados) {
+                    int idProducto = p.getId();
+                    int cantidad = 1;
+                    double precioUnitario = p.getPrecio_con_iva();
+                    double subtotal = cantidad * precioUnitario;
 
-                DetalleVenta detalle = new DetalleVenta(0, venta.getId(), idProducto, cantidad, precioUnitario, subtotal);
-                lstDetalleVentasEscaneados.add(detalle);
+                    DetalleVenta detalle = new DetalleVenta(0, venta.getId(), idProducto, cantidad, precioUnitario, subtotal);
+                    lstDetalleVentasEscaneados.add(detalle);
 
+                }
+
+                ventaDAO.crearVentaConDetalles(venta, lstDetalleVentasEscaneados);
+                obtenerListaDetalleVenta();
+                tablaVentas.getItems().clear();
+                tablaVentas.setItems(obtenerListaVentas());
+                String nombreArchivo = "ticket_venta_" + System.currentTimeMillis() + ".pdf";
+
+                generarTicketPDF(nombreArchivo, lstProductosEscaneados, actualizarLabelTotalVenta());
+
+                Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmacion.setTitle("Venta completada");
+                confirmacion.setHeaderText("¿Desea ver el ticket de venta?");
+                confirmacion.setContentText("Se abrirá en el visor de PDF predeterminado de su sistema.");
+
+                Optional<ButtonType> resultado = confirmacion.showAndWait();
+                if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
+                    abrirPDFConVisorExterno(nombreArchivo);
+                }
+
+                tablaProductos.getItems().clear();
+                actualizarLabelTotalVenta();
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                new Alert(Alert.AlertType.ERROR, "Error al generar el ticket: " + ex.getMessage()).show();
             }
-
-            ventaDAO.crearVentaConDetalles(venta, lstDetalleVentasEscaneados);
-            obtenerListaDetalleVenta();
-            tablaVentas.getItems().clear();
-            tablaVentas.setItems(obtenerListaVentas());
-            String nombreArchivo = "ticket_venta_" + System.currentTimeMillis() + ".pdf";
-
-            generarTicketPDF(nombreArchivo, lstProductosEscaneados, actualizarLabelTotalVenta());
-
-            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
-            confirmacion.setTitle("Venta completada");
-            confirmacion.setHeaderText("¿Desea ver el ticket de venta?");
-            confirmacion.setContentText("Se abrirá en el visor de PDF predeterminado de su sistema.");
-
-            Optional<ButtonType> resultado = confirmacion.showAndWait();
-            if (resultado.isPresent() && resultado.get() == ButtonType.OK) {
-                abrirPDFConVisorExterno(nombreArchivo);
-            }
-
-            tablaProductos.getItems().clear();
-            actualizarLabelTotalVenta();
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "Error al generar el ticket: " + ex.getMessage()).show();
+        }else{
+            mostrarAlerta("Error al crear la venta", "No se puede crear una venta si no se ha escaneado ningún producto");
         }
     }
 
@@ -652,7 +679,7 @@ public class ControladorVenta implements Initializable {
                     if (imagen != null) {
                         preparedStatement.setString(6, imagenToBase64(imagen));
                     } else {
-                        preparedStatement.setNull(6, java.sql.Types.VARCHAR); // o usar preparedStatement.setString(5, ""); si prefieres cadena vacía
+                        preparedStatement.setNull(6, java.sql.Types.VARCHAR);
                     }
 
                     preparedStatement.setString(7, tfpCategoria.getText());
@@ -801,26 +828,59 @@ public class ControladorVenta implements Initializable {
     void eliminarItem(ActionEvent event) {
         switch (identificadorTabla) {
             case 1 -> {
+                if(tablaProductosAdmin.getSelectionModel().getSelectedItem() != null){
                 productoDAO.eliminarProducto(tablaProductosAdmin.getSelectionModel().getSelectedItem());
                 tablaProductos.getItems().clear();
                 tablaProductos.setItems(obtenerListaProductos());
                 tablaCodigoBarras.getItems().clear();
                 tablaCodigoBarras.setItems(obtenerListaCodigoBarras());
+                }else{
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Error al eliminar el producto");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Debe seleccionar un producto de la tabla para poder eliminarlo");
+                    DialogPane dialogPane = alert.getDialogPane();
+                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                    dialogPane.getStyleClass().add("mi-alerta");
+                    alert.showAndWait();
+                }
             
             }
             //case 2 -> 
             case 3 -> {
-                usuarioDAO.eliminarUsuario(tablaUsuarios.getSelectionModel().getSelectedItem());
-                tablaUsuarios.getItems().clear();
-                tablaUsuarios.setItems(obtenerListaUsuarios());
-                tablaSesiones.getItems().clear();
-                tablaSesiones.setItems(obtenerListaSesiones());
+                if(tablaUsuarios.getSelectionModel().getSelectedItem() != null){
+                    usuarioDAO.eliminarUsuario(tablaUsuarios.getSelectionModel().getSelectedItem());
+                    tablaUsuarios.getItems().clear();
+                    tablaUsuarios.setItems(obtenerListaUsuarios());
+                    tablaSesiones.getItems().clear();
+                    tablaSesiones.setItems(obtenerListaSesiones());
+                }else{
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Error al eliminar el usuario");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Debe seleccionar un usuario de la tabla para poder eliminarlo");
+                    DialogPane dialogPane = alert.getDialogPane();
+                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                    dialogPane.getStyleClass().add("mi-alerta");
+                    alert.showAndWait();
+                }
             }
             
             case 4 -> { 
-                ventaDAO.eliminarVenta(tablaVentas.getSelectionModel().getSelectedItem()); 
-                tablaVentas.getItems().clear();
-                tablaVentas.setItems(obtenerListaVentas());
+                if(tablaVentas.getSelectionModel().getSelectedItem() != null){
+                    ventaDAO.eliminarVenta(tablaVentas.getSelectionModel().getSelectedItem()); 
+                    tablaVentas.getItems().clear();
+                    tablaVentas.setItems(obtenerListaVentas());
+                }else{
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Error al eliminar la venta");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Debe seleccionar un venta de la tabla para poder eliminarla");
+                    DialogPane dialogPane = alert.getDialogPane();
+                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                    dialogPane.getStyleClass().add("mi-alerta");
+                    alert.showAndWait();
+                }
             }
             //case 5 -> 
         }
@@ -1091,6 +1151,7 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneProductos(ActionEvent event) {
+        inicializarTablasProductosAdmin();
         vboxEditarItem.setVisible(true);
         vboxEditarItem.getChildren().clear();
         identificadorTabla = 1;
@@ -1223,6 +1284,7 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneSesion(ActionEvent event) {
+        inicializarTablaSesiones();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(true);
         paneUsuarios.setVisible(false);
@@ -1230,7 +1292,7 @@ private boolean existeCorreoEnLista(String correo) {
         paneCodigoBarras.setVisible(false);
         
         vboxEditarItem.getChildren().clear();
-        vboxEditarItem.setVisible(true);
+        vboxEditarItem.setVisible(false);
         identificadorTabla = 2;
     }
     
@@ -1255,6 +1317,7 @@ private boolean existeCorreoEnLista(String correo) {
 
     @FXML
     void verPaneUsuarios(ActionEvent event) {
+        inicializarTablaUsuarios();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(false);
         paneUsuarios.setVisible(true);
@@ -1489,7 +1552,7 @@ private boolean existeCorreoEnLista(String correo) {
 
         @FXML
         void verPaneVentas(ActionEvent event) {
-           
+            inicializarTablaVentas();
             paneProductos.setVisible(false);
             paneSesiones.setVisible(false);
             paneUsuarios.setVisible(false);
@@ -1998,6 +2061,9 @@ private boolean existeCorreoEnLista(String correo) {
             alert.setTitle(titulo);
             alert.setHeaderText(null);
             alert.setContentText(mensaje);
+            DialogPane dialogPane = alert.getDialogPane();
+            dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+            dialogPane.getStyleClass().add("mi-alerta");
             alert.showAndWait();
         }
 
@@ -2075,19 +2141,25 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneCodigoBarras(ActionEvent event) {
+        inicializarTablaCodigosBarras();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(false);
         paneUsuarios.setVisible(false);
         paneVentas.setVisible(false);
         paneCodigoBarras.setVisible(true);
+        identificadorTabla = 5;
         vboxEditarItem.getChildren().clear();
         vboxEditarItem.setVisible(true);
-        identificadorTabla = 5;
+        
         
         tfcCodigo = new TextField();
+        tfcCodigo.setEditable(false);
         tfcProductoAsignado = new TextField();
+        tfcProductoAsignado.setEditable(false);
         tfcFechaGeneracion = new TextField();
+        tfcFechaGeneracion.setEditable(false);
         tfcUsuarioGenerador = new TextField();
+        tfcUsuarioGenerador.setEditable(false);
         imagenCB = new ImageView();
         
         
@@ -2482,26 +2554,66 @@ private boolean existeCorreoEnLista(String correo) {
     public void inicializarTablaVentas() {
         try {
             vColumnID.setCellValueFactory(new PropertyValueFactory<>("id"));
-            vColumnCliente.setCellValueFactory(new PropertyValueFactory<>("cliente_id"));
-            vColumnEmpleado.setCellValueFactory(new PropertyValueFactory<>("empleado_id"));
+
+            vColumnCliente.setCellValueFactory(cellData -> {
+                int clienteId = cellData.getValue().getCliente_id();
+                Usuario cliente = lstUsuarios.stream()
+                    .filter(c -> c.getId() == clienteId)
+                    .findFirst()
+                    .orElse(null);
+
+                String texto = (cliente != null)
+                    ? cliente.getId() + " - " + cliente.getNombre()
+                    : "ID: " + clienteId + " (No encontrado)";
+
+                return new ReadOnlyStringWrapper(texto);
+            });
+
+            vColumnEmpleado.setCellValueFactory(cellData -> {
+                int empleadoId = cellData.getValue().getEmpleado_id();
+                Usuario empleado = lstUsuarios.stream()
+                    .filter(e -> e.getId() == empleadoId)
+                    .findFirst()
+                    .orElse(null);
+
+                String texto = (empleado != null)
+                    ? empleado.getId() + " - " + empleado.getNombre()
+                    : "ID: " + empleadoId + " (No encontrado)";
+
+                return new ReadOnlyStringWrapper(texto);
+            });
+
             vColumnFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
             vColumnDescripcion.setCellValueFactory(new PropertyValueFactory<>("descripcion"));
             vColumnTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
             vColumnMetodoPago.setCellValueFactory(new PropertyValueFactory<>("metodo_pago"));
             vColumnTipoVenta.setCellValueFactory(new PropertyValueFactory<>("tipo_venta"));
             vColumnEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-            
+
             tablaVentas.setItems(lstVentas);
 
         } catch (Exception ex) {
             System.out.println("Error en inicializarTablaVentas: " + ex.getMessage());
         }
     }
+
     
     public void inicializarTablaSesiones() {
         try {
             sColumnID.setCellValueFactory(new PropertyValueFactory<>("id"));
-            sColumnUsuario.setCellValueFactory(new PropertyValueFactory<>("usuario_id"));
+            sColumnUsuario.setCellValueFactory(cellData -> {
+                int usuarioId = cellData.getValue().getUsuario_id();
+                Usuario usuario = lstUsuarios.stream()
+                    .filter(u -> u.getId() == usuarioId)
+                    .findFirst()
+                    .orElse(null);
+
+                String texto = (usuario != null)
+                    ? usuario.getId() + " - " + usuario.getNombre()
+                    : "ID: " + usuarioId + " (No encontrado)";
+
+                return new ReadOnlyStringWrapper(texto);
+            });
             sColumnDispositivo.setCellValueFactory(new PropertyValueFactory<>("dispositivo"));
             sColumnFechaInicio.setCellValueFactory(new PropertyValueFactory<>("fecha_inicio"));
             sColumnUltimaActividad.setCellValueFactory(new PropertyValueFactory<>("fecha_ultima_actividad"));
@@ -2518,8 +2630,34 @@ private boolean existeCorreoEnLista(String correo) {
         try {
             cbColumnCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
             cbColumnFechaGeneracion.setCellValueFactory(new PropertyValueFactory<>("fecha_generacion"));
-            cbColumnProductoAsignado.setCellValueFactory(new PropertyValueFactory<>("producto_asignado"));
-            cbColumnUsuarioGenerador.setCellValueFactory(new PropertyValueFactory<>("usuario_generador"));
+            cbColumnProductoAsignado.setCellValueFactory(cellData -> {
+                int productoId = cellData.getValue().getProducto_asignado();
+                Producto producto = lstProductos.stream()
+                    .filter(p -> p.getId() == productoId)
+                    .findFirst()
+                    .orElse(null);
+
+                String texto = (producto != null) 
+                    ? producto.getId() + " - " + producto.getNombre()
+                    : "ID: " + productoId + " (No encontrado)";
+
+                return new ReadOnlyStringWrapper(texto);
+            });
+
+
+            cbColumnUsuarioGenerador.setCellValueFactory(cellData -> {
+                int usuarioId = cellData.getValue().getUsuario_generador();
+                Usuario usuario = lstUsuarios.stream()
+                    .filter(u -> u.getId() == usuarioId)
+                    .findFirst()
+                    .orElse(null);
+
+                String texto = (usuario != null)
+                    ? usuario.getId() + " - " + usuario.getNombre()
+                    : "ID: " + usuarioId + " (No encontrado)";
+
+                return new ReadOnlyStringWrapper(texto);
+            });
             
             tablaCodigoBarras.setItems(lstCodigoBarras);
 
@@ -2650,25 +2788,34 @@ private boolean existeCorreoEnLista(String correo) {
             
             
             obtenerListaProductos();
-            obtenerListaUsuarios();
-            obtenerListaVentas();
-            obtenerListaSesiones();
-            obtenerListaCodigoBarras();
-            obtenerListaDetalleVenta();
+            
             inicializarTablasProductos();
             
-            inicializarTablaVentas();
-            inicializarTablaSesiones();
-            inicializarTablasProductosAdmin();
-            inicializarTablaCodigosBarras();
-            inicializarTablaUsuarios();
+            obtenerListaUsuarios();
+            
+            
+            obtenerListaVentas();
+            
+            
+            obtenerListaSesiones();
+            
+            
+            obtenerListaCodigoBarras();
+            
+            
+            obtenerListaDetalleVenta();
+            
+            
+            
+            
+            
+            
             
             
             configurarComponentesVenta();
             
             System.out.println(codigoProducto);
             
-            // Cuando llega el mensaje desde WebSocket
             try {
                 clienteWebSocket = new WSClient("ws://54.173.46.205:3001", mensaje -> {
                     System.out.println("Mensaje recibido desde WebSocket: " + mensaje);
@@ -2706,7 +2853,6 @@ private boolean existeCorreoEnLista(String correo) {
     }
 
     private void configurarTablaProductosVenta() {
-        // Configurar las columnas de la tabla
         tc_imagen.setCellValueFactory(new PropertyValueFactory<>("imagenB64"));
         tc_id.setCellValueFactory(new PropertyValueFactory<>("id"));
         tc_nombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
@@ -2799,6 +2945,9 @@ private boolean existeCorreoEnLista(String correo) {
         alert.setTitle("Producto no encontrado");
         alert.setHeaderText(null);
         alert.setContentText("El código de barras " + codigo + " no corresponde a ningún producto");
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        dialogPane.getStyleClass().add("mi-alerta");
         alert.showAndWait();
     }
     

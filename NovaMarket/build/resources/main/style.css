@@ -168,23 +168,6 @@
     -fx-background-color: linear-gradient(to bottom, #c0392b, #a5281b);
 }
 
-/* Botones grandes con imagen */
-#btnProductos, #btnSesiones, #btnUsuarios, #btnVentas, #btnCodigoBarras {
-    -fx-background-color: #9FB4C7;
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-border-color: transparent;
-    -fx-border-width: 1;
-    -fx-padding: 10;
-    -fx-border-radius: 10;
-    -fx-background-radius: 10;
-}
-
-#btnProductos:hover, #btnSesiones:hover, #btnUsuarios:hover, #btnVentas:hover, #btnCodigoBarras:hover {
-    -fx-background-color: rgb(150, 150, 150);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);
-}
 
 /* Botones grandes con imagen - Versión animada */
 #btnProductos, #btnSesiones, #btnUsuarios, #btnVentas, #btnCodigoBarras {
@@ -210,13 +193,7 @@
     -fx-scale-y: 1.02;
 }
 
-#btnProductos:pressed, #btnSesiones:pressed, #btnUsuarios:pressed, #btnVentas:pressed, #btnCodigoBarras:pressed {
-    -fx-background-color: #7A8FA3;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0.3, 0, 2);
-    -fx-translate-y: -2px;
-    -fx-scale-x: 1.02;
-    -fx-scale-y: 1.02;
-}
+
 
 #bloqueAdministracion{
     -fx-padding: 20 0 0 0;
@@ -270,7 +247,7 @@
 }
 
 .table-row-cell:selected {
-    -fx-background-color: #3498db;
+    -fx-background-color: #9FB4C7;
     -fx-text-fill: rgb(255, 255, 255);
     -fx-border-radius: 10 10 10 10;
     -fx-background-radius: 10 10 10 10;
@@ -306,7 +283,7 @@
 }
 
 /* Imágenes */
-.image-view {F
+.image-view {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0.3, 0, 1);
 }
 

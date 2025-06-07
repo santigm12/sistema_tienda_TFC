@@ -25,7 +25,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.mindrot.jbcrypt.BCrypt;
@@ -47,7 +49,7 @@ public class ControladorLogin implements Initializable {
     private Button btnIniciarSesion;
 
     @FXML
-    private TextField txtContrasena;
+    private PasswordField txtContrasena;
 
     @FXML
     private TextField txtUsuario;
@@ -55,7 +57,7 @@ public class ControladorLogin implements Initializable {
     private void loginAutomatico() {
 }
 
-    private static final boolean MODO_DESARROLLO = true;
+    private static final boolean MODO_DESARROLLO = false;
 
 @FXML
 void iniciarSesion(ActionEvent event) {
@@ -200,8 +202,9 @@ void iniciarSesion(ActionEvent event) {
             scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
             Stage stage = new Stage();
-            stage.setTitle("Venta");
+            stage.setTitle("NovaMarket");
             stage.setScene(scene);
+            stage.getIcons().add(new Image(getClass().getResourceAsStream("/logoApp.png")));
             stage.setMaximized(true);
 
             stage.show();
@@ -214,11 +217,9 @@ void iniciarSesion(ActionEvent event) {
             e.printStackTrace();
         }
     }
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        
-        
-        
         
         try {
             conexion = ConexionSingleton.obtenerConexion();

@@ -180,7 +180,7 @@
                                                                 </columnResizePolicy>
                                                                 <columns>
                                                                     <TableColumn fx:id="sColumnID" text="ID" />
-                                                                    <TableColumn fx:id="sColumnUsuario" text="Ususario + ID" />
+                                                                    <TableColumn fx:id="sColumnUsuario" text="(ID) Usuario" />
                                                                     <TableColumn fx:id="sColumnDispositivo" text="Dispositivo" />
                                                                     <TableColumn fx:id="sColumnFechaInicio" text="Fecha inicio" />
                                                                     <TableColumn fx:id="sColumnUltimaActividad" text="Ultima actividad" />
@@ -218,8 +218,8 @@
                                                                 </columnResizePolicy>
                                                                 <columns>
                                                                     <TableColumn fx:id="vColumnID" text="ID" />
-                                                                    <TableColumn fx:id="vColumnCliente" text="Cliente" />
-                                                                    <TableColumn fx:id="vColumnEmpleado" text="Empleado" />
+                                                                    <TableColumn fx:id="vColumnCliente" text="(ID) Cliente" />
+                                                                    <TableColumn fx:id="vColumnEmpleado" text="(ID) Empleado" />
                                                                     <TableColumn fx:id="vColumnFecha" text="Fecha" />
                                                                     <TableColumn fx:id="vColumnDescripcion" prefWidth="75.0" text="Descripción" />
                                                                     <TableColumn fx:id="vColumnTotal" text="Total" />
@@ -239,7 +239,7 @@
                                                                 </columnResizePolicy>
                                                                 <columns>
                                                                     <TableColumn fx:id="cbColumnCodigo" text="Codigo" />
-                                                                    <TableColumn fx:id="cbColumnProductoAsignado" text="Producto asignado" />
+                                                                    <TableColumn fx:id="cbColumnProductoAsignado" text="(ID) Producto asignado" />
                                                                     <TableColumn fx:id="cbColumnFechaGeneracion" text="Fecha generación" />
                                                                     <TableColumn fx:id="cbColumnUsuarioGenerador" text="Usuario generador" />
                                                                 </columns>

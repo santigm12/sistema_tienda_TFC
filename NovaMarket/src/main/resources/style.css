@@ -1,7 +1,7 @@
 /* Estilo general */
 .root {
     -fx-font-family: "Segoe UI", sans-serif;
-    -fx-background-color: #f5f7fa;
+    -fx-background-color: #ebe3c2;
 }
 
 /* Encabezado superior */
@@ -47,26 +47,47 @@
     -fx-background-color: #ecf0f1;
 }
 
-.tab-pane .tab-header-area {
-    -fx-background-color: #34495e;
+.tab-pane > .tab-header-area {
+    -fx-padding: 0;
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+}
+
+.tab-pane > .tab-header-area > .headers-region {
+    -fx-alignment: CENTER;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-radius: 10 10 10 10;
+    -fx-padding: 10 25;
+    -fx-background-color: #9FB4C7;
+    -fx-background-insets: 0 2 0 2;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #ecf0f1;
 }
 
 .tab-pane .tab-header-background {
-    -fx-background-color: #34495e;
+    -fx-background-color: #ebe3c2;
 }
 
 .tab {
     -fx-background-insets: 0 1 0 0, 0;
-    -fx-background-radius: 5 5 0 0;
-    -fx-padding: 5 15;
+    -fx-background-radius: 10 10 10 10;
+    -fx-padding: 10 15;
+    -fx-background-insets: 0 5 0 5;
     -fx-background-color: #7f8c8d;
-    -fx-border-color: #34495e;
+    -fx-border-color: transparent;
     -fx-border-width: 1 1 0 1;
+    -fx-alignment: CENTER;
 }
 
 .tab:selected {
     -fx-background-color: #ecf0f1;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1 1 0 1;
 }
 
@@ -74,10 +95,31 @@
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
+    -fx-alignment: CENTER;
 }
 
 .tab:selected .tab-label {
     -fx-text-fill: #2c3e50;
+}
+
+/* Eliminar el foco visual de los tabs */
+.tab-pane .tab:selected .focus-indicator {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+/* Opcional: también puedes quitar el foco de otros elementos */
+.tab-pane:focused .tab:selected .focus-indicator {
+    -fx-border-color: transparent;
+}
+
+.tab-pane-centered .tab-header-area {
+    -fx-alignment: CENTER;
+}
+
+.tab-pane-centered .headers-region {
+    -fx-alignment: CENTER;
+    -fx-translate-x: 0;
 }
 
 /* Labels de precio */
@@ -126,47 +168,67 @@
     -fx-background-color: linear-gradient(to bottom, #c0392b, #a5281b);
 }
 
-/* Botones grandes con imagen */
+
+/* Botones grandes con imagen - Versión animada */
 #btnProductos, #btnSesiones, #btnUsuarios, #btnVentas, #btnCodigoBarras {
-    -fx-background-color: transparent;
-    -fx-text-fill: #2c3e50;
+    -fx-background-color: #9FB4C7;
+    -fx-text-fill: #ffffff;
     -fx-font-size: 16px;
     -fx-font-weight: bold;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
     -fx-padding: 10;
-    -fx-background-radius: 5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0.2, 0, 1);
+    -fx-transition: all 0.3s ease;
+    -fx-cursor: hand;
 }
 
 #btnProductos:hover, #btnSesiones:hover, #btnUsuarios:hover, #btnVentas:hover, #btnCodigoBarras:hover {
-    -fx-background-color: rgba(189, 195, 199, 0.2);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);
+    -fx-background-color: #7A8FA3;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0.3, 0, 2);
+    -fx-translate-y: -2px;
+    -fx-scale-x: 1.02;
+    -fx-scale-y: 1.02;
 }
 
+
+
+#bloqueAdministracion{
+    -fx-padding: 20 0 0 0;
+    -fx-background-color: #ebe3c2;
+}
 /* Tablas */
 .table-view {
     -fx-background-color: white;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1;
     -fx-table-cell-border-color: #ecf0f1;
     -fx-padding: 5;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
+    -fx-border-radius: 10 10 10 10;
+    -fx-background-radius: 10 10 10 10;
+    /*-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);*/
 }
 
 .table-view .column-header-background {
-    -fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);
+    -fx-border-radius: 10 10 10 10;
+    -fx-background-radius: 10 10 10 10;
+    -fx-border-color: transparent;
+    /*-fx-background-color: linear-gradient(to bottom, #34495e, #2c3e50);*/
 }
 
 .table-view .column-header,
 .table-view .filler {
     -fx-size: 40px;
-    -fx-border-color: transparent transparent #bdc3c7 transparent;
+    -fx-border-radius: 10 10 10 10;
+    -fx-background-radius: 10 10 10 10;
+    -fx-border-color: transparent ;
     -fx-background-insets: 0;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: white;
+    -fx-text-fill: rgb(0, 0, 0);
     -fx-font-weight: bold;
     -fx-alignment: CENTER;
     -fx-padding: 0 0 5 0;
@@ -185,18 +247,39 @@
 }
 
 .table-row-cell:selected {
-    -fx-background-color: #3498db;
-    -fx-text-fill: white;
+    -fx-background-color: #9FB4C7;
+    -fx-text-fill: rgb(255, 255, 255);
+    -fx-border-radius: 10 10 10 10;
+    -fx-background-radius: 10 10 10 10;
+}
+
+.table-view .table-cell {
+    -fx-alignment: CENTER;
+    -fx-padding: 5 10 5 10; 
+}
+
+.table-view .column-header .label {
+    -fx-alignment: CENTER;
+    -fx-padding: 5 10 5 10;
 }
 
 /* VBox contenedor lateral */
 #vboxPrecio {
     -fx-background-color: white;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
+    -fx-border-radius: 10;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
-    -fx-background-radius: 5;
+    -fx-background-radius: 10;
+}
+
+#vboxBotonesNavegacion {
+    -fx-background-color: #ebe3c2;
+
+}
+
+#vboxLista {
+    -fx-padding: 0 0 0 20
 }
 
 /* Imágenes */
@@ -247,17 +330,35 @@
 }
 
 /* Efectos de hover para las celdas de la tabla */
-.table-row-cell:hover {
+/*.table-row-cell:hover {
     -fx-background-color: #e3f2fd;
-}
+}*/
 
 /* Estilo para el panel de edición */
 #vboxEditarItem {
     -fx-background-color: white;
-    -fx-border-color: #bdc3c7;
+    -fx-border-color: transparent;
     -fx-border-width: 1;
-    -fx-border-radius: 5;
+    -fx-border-radius: 10 0 0 10;
+    -fx-background-radius: 10 0 0 10;
     -fx-padding: 15;
     -fx-spacing: 10;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 1);
+}
+
+#vboxTablasAdmin{
+    -fx-padding: 0 15 0 0;
+}
+
+#hboxCrud{
+    -fx-background-color: #ebe3c2;
+}
+
+#hboxCabecera{
+    -fx-background-color: #5e6670;
+}
+
+#hboxPrincipalVentas {
+    -fx-background-color: #ebe3c2;
+    -fx-padding: 20;
 }

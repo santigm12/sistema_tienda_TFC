@@ -52,6 +52,8 @@ class CarritoFragment : Fragment() {
 
         carritoViewModel.productosEnCarrito.observe(viewLifecycleOwner) { productos ->
             adapter.setListaProductos(productos)
+            val total = productos.sumOf { it.precio_con_iva }
+            binding.txtTotalCarrito.text = "Total: %.2f€".format(total)
         }
 
         binding.btnRealizarPedido.setOnClickListener {
@@ -78,7 +80,7 @@ class CarritoFragment : Fragment() {
         val metodoPago = "PENDIENTE"
         val tipoVenta = "ONLINE"
         val descripcion = "Compra desde app"
-        val total = productos.sumOf { it.precio_con_iva }
+        val total:Double = productos.sumOf { it.precio_con_iva }
 
         val ventaJson = """
         {
