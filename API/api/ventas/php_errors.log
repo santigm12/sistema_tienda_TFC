@@ -1,0 +1,8 @@
+[22-May-2025 22:38:35 Europe/London] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli::beginTransaction() in /app/sistema-tienda-api/api/ventas/eliminar.php:51
+Stack trace:
+#0 {main}
+  thrown in /app/sistema-tienda-api/api/ventas/eliminar.php on line 51
+[22-May-2025 22:45:16 Europe/London] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli::beginTransaction() in /app/sistema-tienda-api/api/ventas/eliminar.php:46
+Stack trace:
+#0 {main}
+  thrown in /app/sistema-tienda-api/api/ventas/eliminar.php on line 46

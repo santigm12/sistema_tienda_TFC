@@ -120,6 +120,7 @@ import javax.management.openmbean.SimpleType;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
@@ -586,18 +587,6 @@ public class ControladorVenta implements Initializable {
                 Desktop desktop = Desktop.getDesktop();
                 if (file.exists()) {
                     desktop.open(file);
-
-                    Alert imprimirAlert = new Alert(Alert.AlertType.CONFIRMATION);
-                    DialogPane dialogPane = imprimirAlert.getDialogPane();
-                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-                    dialogPane.getStyleClass().add("mi-alerta");
-                    imprimirAlert.setTitle("Imprimir Ticket");
-                    imprimirAlert.setHeaderText("¿Desea imprimir el ticket ahora?");
-
-                    Optional<ButtonType> printResult = imprimirAlert.showAndWait();
-                    if (printResult.isPresent() && printResult.get() == ButtonType.OK) {
-                        imprimirPDF(rutaPDF);
-                    }
                 }
             } else {
                 throw new Exception("No se puede abrir el PDF: Desktop no soportado en este sistema");
@@ -644,32 +633,158 @@ public class ControladorVenta implements Initializable {
     }
     
     public void generarTicketPDF(String rutaArchivo, List<Producto> productos, double total) {
-        try (PDDocument doc = new PDDocument()) {
-            PDPage page = new PDPage();
-            doc.addPage(page);
+    try (PDDocument doc = new PDDocument()) {
+        PDPage page = new PDPage(new PDRectangle(226.8f, 595.3f));
+        doc.addPage(page);
 
-            try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
-                content.beginText();
-                content.setFont(PDType1Font.COURIER, 12);
-                content.newLineAtOffset(50, 700);
-                content.showText("=== TICKET DE VENTA ===");
-                content.newLineAtOffset(0, -20);
-
-                for (Producto p : productos) {
-                    content.showText(p.getNombre() + " - " + p.getPrecio()+"€");
-                    content.newLineAtOffset(0, -15);
+        try (PDPageContentStream content = new PDPageContentStream(doc, page)) {
+            float margin = 15;
+            float yPosition = 550;
+            float lineHeight = 12;
+            float fontSize = 8;
+            float pageWidth = 226.8f - (2 * margin);
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA_BOLD, 10);
+            float titleWidth = PDType1Font.HELVETICA_BOLD.getStringWidth("NovaMarket") / 1000 * 10;
+            content.newLineAtOffset((pageWidth - titleWidth) / 2 + margin, yPosition);
+            content.showText("NovaMarket");
+            content.endText();
+            
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA, 6);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("C/Falsa 123, Ciudad - Tel: 900 000 000");
+            content.endText();
+            
+            yPosition -= lineHeight * 1.5f;
+            
+            drawCenteredLine(content, margin, yPosition, pageWidth, 0.5f);
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA, fontSize);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("Ticket #" + String.format("%06d", (int)(Math.random() * 1000000)));
+            content.endText();
+            
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA, fontSize);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("Fecha: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")));
+            content.endText();
+            
+            yPosition -= lineHeight * 1.5f;
+            
+            drawCenteredLine(content, margin, yPosition, pageWidth, 0.5f);
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA_BOLD, fontSize);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("Producto");
+            content.newLineAtOffset(pageWidth - 40, 0);
+            content.showText("Precio");
+            content.endText();
+            
+            yPosition -= lineHeight;
+            drawCenteredLine(content, margin, yPosition, pageWidth, 0.5f);
+            yPosition -= lineHeight * 0.5f;
+            
+            for (Producto p : productos) {
+                String nombre = p.getNombre();
+                String precio = String.format("%.2f€", p.getPrecio_con_iva());
+                
+                if (nombre.length() > 20) {
+                    String primeraLinea = nombre.substring(0, 20);
+                    String segundaLinea = nombre.substring(20);
+                    
+                    content.beginText();
+                    content.setFont(PDType1Font.HELVETICA, fontSize);
+                    content.newLineAtOffset(margin, yPosition);
+                    content.showText(primeraLinea);
+                    content.endText();
+                    
+                    yPosition -= lineHeight;
+                    
+                    content.beginText();
+                    content.setFont(PDType1Font.HELVETICA, fontSize);
+                    content.newLineAtOffset(margin, yPosition);
+                    content.showText(segundaLinea);
+                    content.newLineAtOffset(pageWidth - 40, 0);
+                    content.showText(precio);
+                    content.endText();
+                } else {
+                    content.beginText();
+                    content.setFont(PDType1Font.HELVETICA, fontSize);
+                    content.newLineAtOffset(margin, yPosition);
+                    content.showText(nombre);
+                    content.newLineAtOffset(pageWidth - 40, 0);
+                    content.showText(precio);
+                    content.endText();
                 }
-
-                content.newLineAtOffset(0, -20);
-                content.showText("Total: " + total+"€");
-                content.endText();
+                
+                yPosition -= lineHeight;
             }
-
-            doc.save(rutaArchivo);
-        } catch (Exception e) {
-            e.printStackTrace();
+            
+            yPosition -= lineHeight * 0.5f;
+            drawCenteredLine(content, margin, yPosition, pageWidth, 1f);
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA_BOLD, fontSize + 1);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("TOTAL:");
+            content.newLineAtOffset(pageWidth - 40, 0);
+            content.showText(String.format("%.2f€", total));
+            content.endText();
+            
+            yPosition -= lineHeight * 2;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA, fontSize - 1);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("IVA incluido (21%)");
+            content.newLineAtOffset(pageWidth - 40, 0);
+            content.showText(String.format("%.2f€", total * 0.21));
+            content.endText();
+            
+            yPosition -= lineHeight * 2;
+            
+            drawCenteredLine(content, margin, yPosition, pageWidth, 0.5f);
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA_OBLIQUE, fontSize - 1);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("Gracias por su compra");
+            content.endText();
+            
+            yPosition -= lineHeight;
+            
+            content.beginText();
+            content.setFont(PDType1Font.HELVETICA, 6);
+            content.newLineAtOffset(margin, yPosition);
+            content.showText("Conserve este ticket para devoluciones");
+            content.endText();
         }
+
+        doc.save(rutaArchivo);
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
+
+private void drawCenteredLine(PDPageContentStream content, float x, float y, float width, float thickness) throws IOException {
+    content.setLineWidth(thickness);
+    content.moveTo(x, y);
+    content.lineTo(x + width, y);
+    content.stroke();
+}
 
     @FXML
     void actualizarItem(ActionEvent event) {
