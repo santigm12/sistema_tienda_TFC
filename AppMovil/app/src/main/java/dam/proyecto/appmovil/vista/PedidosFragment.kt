@@ -107,7 +107,7 @@ class PedidosFragment : Fragment() {
         if (show) {
             binding.lstPedidos.visibility = View.GONE
             if (message.isNotEmpty()) {
-                mostrarToastPersonalizado(requireContext(), message, "info")
+                //mostrarToastPersonalizado(requireContext(), message, "info")
             }
         } else {
             binding.lstPedidos.visibility = View.VISIBLE

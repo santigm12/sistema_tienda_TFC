@@ -4,6 +4,8 @@
  */
 package com.proyectobase.modelo;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -92,17 +94,18 @@ public class DetalleVentaDAO {
                     throw new SQLException("No se encontró el detalle de venta para eliminar");
                 }
 
-                // 2. Actualizar stock del producto
                 String sqlActualizarStock = "UPDATE productos SET stock = stock + ? WHERE id = ?";
                 stmtActualizarStock = conn.prepareStatement(sqlActualizarStock);
                 stmtActualizarStock.setInt(1, detalle.getCantidad());
                 stmtActualizarStock.setInt(2, detalle.getProducto_id());
                 stmtActualizarStock.executeUpdate();
 
-                // 3. Actualizar el total de la venta
                 String sqlActualizarVenta = "UPDATE ventas SET total = total - ? WHERE id = ?";
                 stmtActualizarVenta = conn.prepareStatement(sqlActualizarVenta);
-                stmtActualizarVenta.setDouble(1, detalle.getSubtotal());
+
+                BigDecimal subtotal = new BigDecimal(detalle.getSubtotal()).setScale(2, RoundingMode.HALF_UP);
+                stmtActualizarVenta.setBigDecimal(1, subtotal);
+
                 stmtActualizarVenta.setInt(2, detalle.getVenta_id());
                 stmtActualizarVenta.executeUpdate();
 

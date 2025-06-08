@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -37,6 +39,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -504,16 +507,20 @@ public class ControladorVenta implements Initializable {
         
     }
     
-    public double actualizarLabelTotalVenta(){
+    public double actualizarLabelTotalVenta() {
         double total = 0;
-        
-        
-        for(int i = 0; i<lstProductosEscaneados.size(); i++){
-            total+=lstProductosEscaneados.get(i).getPrecio_con_iva();
+
+        for(int i = 0; i < lstProductosEscaneados.size(); i++) {
+            total += lstProductosEscaneados.get(i).getPrecio_con_iva();
         }
-        lblPrecio.setText(total+"€");
-        return total;
+
+        DecimalFormat df = new DecimalFormat("0.00");
+        df.setRoundingMode(RoundingMode.HALF_UP);
+        lblPrecio.setText(df.format(total) + "€");
+
+        return Math.round(total * 100.0) / 100.0;
     }
+    
     ObservableList<DetalleVenta> lstDetalleVentaEscaneados = FXCollections.observableArrayList();
     @FXML
     void finalizarCompra(ActionEvent event) {
@@ -547,6 +554,9 @@ public class ControladorVenta implements Initializable {
                 generarTicketPDF(nombreArchivo, lstProductosEscaneados, actualizarLabelTotalVenta());
 
                 Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                DialogPane dialogPane = confirmacion.getDialogPane();
+                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                    dialogPane.getStyleClass().add("mi-alerta");
                 confirmacion.setTitle("Venta completada");
                 confirmacion.setHeaderText("¿Desea ver el ticket de venta?");
                 confirmacion.setContentText("Se abrirá en el visor de PDF predeterminado de su sistema.");
@@ -558,6 +568,7 @@ public class ControladorVenta implements Initializable {
 
                 tablaProductos.getItems().clear();
                 actualizarLabelTotalVenta();
+                obtenerListaVentas();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -577,6 +588,9 @@ public class ControladorVenta implements Initializable {
                     desktop.open(file);
 
                     Alert imprimirAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                    DialogPane dialogPane = imprimirAlert.getDialogPane();
+                    dialogPane.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+                    dialogPane.getStyleClass().add("mi-alerta");
                     imprimirAlert.setTitle("Imprimir Ticket");
                     imprimirAlert.setHeaderText("¿Desea imprimir el ticket ahora?");
 
@@ -665,13 +679,18 @@ public class ControladorVenta implements Initializable {
                     mostrarAlerta("Campos inválidos", "Por favor corrige los campos marcados antes de actualizar.");
                     return;
                 }
-                
-                String query = "UPDATE productos SET nombre=?, precio=?, precio_con_iva=?, stock=?, descripcion=?, imagenB64=?, categoria=? WHERE id=?";
+
+                String query = "UPDATE productos SET nombre=?, precio=?, precio_con_iva=?, stock=?, descripcion=?, imagenB64=?, categoria=?, fecha_actualizacion=? WHERE id=?";
                 try {
                     PreparedStatement preparedStatement = this.conexion.prepareStatement(query);
                     preparedStatement.setString(1, tfpNombre.getText());
-                    preparedStatement.setDouble(2, Double.parseDouble(tfpPrecio.getText()));
-                    preparedStatement.setDouble(3, Double.parseDouble(tfpPrecioIva.getText()));
+
+                    BigDecimal precio = new BigDecimal(tfpPrecio.getText()).setScale(2, RoundingMode.HALF_UP);
+                    preparedStatement.setDouble(2, precio.doubleValue());
+
+                    BigDecimal precioIva = new BigDecimal(tfpPrecioIva.getText()).setScale(2, RoundingMode.HALF_UP);
+                    preparedStatement.setDouble(3, precioIva.doubleValue());
+
                     preparedStatement.setInt(4, Integer.parseInt(tfpStock.getText()));
                     preparedStatement.setString(5, tfpDescripcion.getText());
 
@@ -683,7 +702,8 @@ public class ControladorVenta implements Initializable {
                     }
 
                     preparedStatement.setString(7, tfpCategoria.getText());
-                    preparedStatement.setInt(8, Integer.parseInt(tfpid.getText()));
+                    preparedStatement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+                    preparedStatement.setInt(9, Integer.parseInt(tfpid.getText()));
 
                     preparedStatement.executeUpdate();
                 } catch (SQLException ex) {
@@ -697,9 +717,7 @@ public class ControladorVenta implements Initializable {
                 tablaProductosAdmin.setItems(obtenerListaProductos());
             }
             
-            case 2 -> {
             
-            }
             
             case 3 -> {
                 
@@ -771,17 +789,23 @@ public class ControladorVenta implements Initializable {
                             preparedStatement.setInt(2, idEmpleado);
                             preparedStatement.setString(3, dpFecha.getValue().toString());
                             preparedStatement.setString(4, tfvDescripcion.getText());
-                            preparedStatement.setDouble(5, Double.parseDouble(tfvTotal.getText()));
+
+                            // Redondeo a 2 decimales usando BigDecimal
+                            BigDecimal total = new BigDecimal(tfvTotal.getText()).setScale(2, RoundingMode.HALF_UP);
+                            preparedStatement.setDouble(5, total.doubleValue());
+
                             preparedStatement.setString(6, tfvMetodoPago.getText());
                             preparedStatement.setString(7, tfvTipoVenta.getText());
                             preparedStatement.setString(8, tfvEstado.getText());
                             preparedStatement.setInt(9, Integer.parseInt(tfvId.getText()));
+
                             preparedStatement.executeUpdate();
                         } catch (SQLException ex) {
                             System.out.println("Excepción: "+ex.getMessage());
-                        }catch (IllegalArgumentException e){
+                        } catch (IllegalArgumentException e) {
                             System.out.println("El número introducido no es correcto");
                         }
+
                         tablaVentas.getItems().clear();
                         tablaVentas.setItems(obtenerListaVentas());
             }
@@ -807,17 +831,23 @@ public class ControladorVenta implements Initializable {
                             preparedStatement.setInt(2, idEmpleado);
                             preparedStatement.setString(3, dpFecha.getValue().toString());
                             preparedStatement.setString(4, tfvDescripcion.getText());
-                            preparedStatement.setDouble(5, Double.parseDouble(tfvTotal.getText()));
+
+                            // Redondeo a 2 decimales con BigDecimal
+                            BigDecimal total = new BigDecimal(tfvTotal.getText()).setScale(2, RoundingMode.HALF_UP);
+                            preparedStatement.setBigDecimal(5, total);
+
                             preparedStatement.setString(6, tfvMetodoPago.getText());
                             preparedStatement.setString(7, tfvTipoVenta.getText());
                             preparedStatement.setString(8, tfvEstado.getText());
                             preparedStatement.setInt(9, Integer.parseInt(tfvId.getText()));
+
                             preparedStatement.executeUpdate();
                         } catch (SQLException ex) {
-                            System.out.println("Excepción: "+ex.getMessage());
-                        }catch (IllegalArgumentException e){
+                            System.out.println("Excepción: " + ex.getMessage());
+                        } catch (IllegalArgumentException e) {
                             System.out.println("El número introducido no es correcto");
                         }
+
                         tablaVentas.getItems().clear();
                         tablaVentas.setItems(obtenerListaVentas());
             }
@@ -1151,6 +1181,8 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneProductos(ActionEvent event) {
+        tablaProductosAdmin.getItems().clear();
+        obtenerListaProductos();
         inicializarTablasProductosAdmin();
         vboxEditarItem.setVisible(true);
         vboxEditarItem.getChildren().clear();
@@ -1284,6 +1316,8 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneSesion(ActionEvent event) {
+        tablaSesiones.getItems().clear();
+        obtenerListaSesiones();
         inicializarTablaSesiones();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(true);
@@ -1317,6 +1351,8 @@ private boolean existeCorreoEnLista(String correo) {
 
     @FXML
     void verPaneUsuarios(ActionEvent event) {
+        tablaUsuarios.getItems().clear();
+        obtenerListaUsuarios();
         inicializarTablaUsuarios();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(false);
@@ -1552,7 +1588,10 @@ private boolean existeCorreoEnLista(String correo) {
 
         @FXML
         void verPaneVentas(ActionEvent event) {
+            tablaVentas.getItems().clear();
+            obtenerListaVentas();
             inicializarTablaVentas();
+            
             paneProductos.setVisible(false);
             paneSesiones.setVisible(false);
             paneUsuarios.setVisible(false);
@@ -2141,6 +2180,8 @@ private boolean existeCorreoEnLista(String correo) {
     
     @FXML
     void verPaneCodigoBarras(ActionEvent event) {
+        tablaCodigoBarras.getItems().clear();
+        obtenerListaCodigoBarras();
         inicializarTablaCodigosBarras();
         paneProductos.setVisible(false);
         paneSesiones.setVisible(false);
@@ -2311,6 +2352,7 @@ private boolean existeCorreoEnLista(String correo) {
     }
     
     private ObservableList obtenerListaUsuarios() {
+        lstUsuarios.clear();
         if (conexion != null) {
             String query = "SELECT * FROM usuarios";
             try {
@@ -2373,6 +2415,7 @@ private boolean existeCorreoEnLista(String correo) {
     }
     
     private ObservableList obtenerListaSesiones() {
+        lstSesiones.clear();
         if (conexion != null) {
             String query = "SELECT * FROM sesiones";
             try {
@@ -2397,6 +2440,7 @@ private boolean existeCorreoEnLista(String correo) {
     }
     
     private ObservableList obtenerListaCodigoBarras() {
+        lstCodigoBarras.clear();
         if (conexion != null) {
             String query = "SELECT * FROM codigos_barras";
             try {
@@ -2919,7 +2963,7 @@ private boolean existeCorreoEnLista(String correo) {
                     Producto producto = productoEncontrado.get();
                     lstProductosEscaneados.add(producto);
                     totalCompra += producto.getPrecio_con_iva();
-                    lblPrecio.setText(totalCompra+"€");
+                    actualizarLabelTotalVenta();
 
                    
                 } else {

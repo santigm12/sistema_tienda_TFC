@@ -63,17 +63,17 @@ public class ControladorLogin implements Initializable {
 void iniciarSesion(ActionEvent event) {
     if (MODO_DESARROLLO) {
         Usuario usuarioFalso = new Usuario(
-        1,
-        "dev@ejemplo.com",
-        "$2a$10$devHashedPassword1234567890",
-        "administrador",
-        "NombreDev",
-        "ApellidoDev",
-        "600123456",
-        "Calle Falsa 123",
-        new java.util.Date(),
-        1
-    );
+            1,
+            "dev@ejemplo.com",
+            "$2a$10$devHashedPassword1234567890",
+            "administrador",
+            "NombreDev",
+            "ApellidoDev",
+            "600123456",
+            "Calle Falsa 123",
+            new java.util.Date(),
+            1
+        );
 
         SessionManager.getInstance().setUsuarioLogueado(usuarioFalso);
         abrirVentanaVenta();
@@ -100,6 +100,13 @@ void iniciarSesion(ActionEvent event) {
             return;
         }
 
+        // Validar rol permitido
+        String rol = usuarioLogin.getRol();
+        if (!rol.equalsIgnoreCase("empleado") && !rol.equalsIgnoreCase("administrador")) {
+            mostrarAlertaError("Acceso denegado", "Su rol no tiene permiso para iniciar sesión");
+            return;
+        }
+
         SessionManager.getInstance().setUsuarioLogueado(usuarioLogin);
         abrirVentanaVenta();
 
@@ -108,6 +115,7 @@ void iniciarSesion(ActionEvent event) {
         e.printStackTrace();
     }
 }
+
 
 
     
